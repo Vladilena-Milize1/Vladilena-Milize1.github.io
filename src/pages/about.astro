@@ -1,0 +1,53 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { SITE } from '../site.config';
+---
+
+<BaseLayout title="关于我" description={`关于 ${SITE.author} 与本博客的介绍`}>
+  <div class="max-w-3xl mx-auto">
+    <header class="mb-10 pb-6 border-b border-neutral-200 dark:border-neutral-800">
+      <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-neutral-900 dark:text-neutral-50 mb-3">
+        关于我
+      </h1>
+      <p class="text-neutral-600 dark:text-neutral-400">
+        Hi, 这里是 {SITE.author} 的个人数字空间。
+      </p>
+    </header>
+
+    <div class="prose dark:prose-invert max-w-none space-y-6">
+      <p>
+        我是一名热衷于全栈技术、系统架构与系统级语言（如 Rust）的开发者。
+        搭建这个博客的初衷是沉淀技术实践、记录认知迭代，并将其作为一个可供长期维护与演进的个人数字化花园。
+      </p>
+
+      <h2>技术偏好</h2>
+      <ul>
+        <li><strong>语言与架构</strong>：TypeScript、Rust、Go、Node.js</li>
+        <li><strong>前端与全栈</strong>：Astro、React、Tailwind CSS、Next.js</li>
+        <li><strong>工程与运维</strong>：GitOps、Docker、Cloudflare Pages、GitHub Actions</li>
+      </ul>
+
+      <h2>联系方式</h2>
+      <p>
+        如果你对我写的内容有任何疑问、探讨建议或合作交流，欢迎随时通过以下方式与我取得联系：
+      </p>
+      <ul>
+        {SITE.socials.github && (
+          <li>
+            GitHub: <a href={SITE.socials.github} target="_blank" rel="noopener noreferrer">{SITE.socials.github}</a>
+          </li>
+        )}
+        {SITE.socials.twitter && (
+          <li>
+            Twitter: <a href={SITE.socials.twitter} target="_blank" rel="noopener noreferrer">{SITE.socials.twitter}</a>
+          </li>
+        )}
+        {SITE.socials.email && (
+          <li>
+            Email: <a href={SITE.socials.email}>{SITE.socials.email.replace('mailto:', '')}</a>
+          </li>
+        )}
+      </ul>
+    </div>
+  </div>
+</BaseLayout>

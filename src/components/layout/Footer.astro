@@ -1,0 +1,53 @@
+---
+import { SITE } from '../../site.config';
+
+const currentYear = new Date().getFullYear();
+const yearDisplay = currentYear === SITE.footer.sinceYear
+  ? `${SITE.footer.sinceYear}`
+  : `${SITE.footer.sinceYear} - ${currentYear}`;
+---
+
+<footer class="mt-auto border-t border-neutral-200 dark:border-neutral-800 text-sm text-neutral-500 dark:text-neutral-400 py-8 safe-bottom">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+    <div class="flex items-center gap-2">
+      <span>© {yearDisplay} {SITE.author}.</span>
+      <span>保持独立思考与纯粹热爱.</span>
+    </div>
+
+    <div class="flex items-center gap-4 text-xs font-medium">
+      {SITE.socials.github && (
+        <a
+          href={SITE.socials.github}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
+        >
+          GitHub
+        </a>
+      )}
+      <a
+        href="/rss.xml"
+        class="hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
+      >
+        RSS 订阅
+      </a>
+      <button
+        id="back-to-top"
+        type="button"
+        class="hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
+        aria-label="回到顶部"
+      >
+        ↑ 回到顶部
+      </button>
+    </div>
+  </div>
+</footer>
+
+<script is:inline>
+  const topBtn = document.getElementById("back-to-top");
+  if (topBtn) {
+    topBtn.addEventListener("click", () => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }
+</script>

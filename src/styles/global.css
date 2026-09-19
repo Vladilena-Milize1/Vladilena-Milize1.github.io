@@ -1,0 +1,65 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-neutral-50 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100 antialiased min-h-screen flex flex-col;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  /* 移动端彻底杜绝横向摇晃 */
+  body,
+  html {
+    overflow-x: hidden;
+  }
+}
+
+/* 响应式排版与代码块防溢出强化 */
+.prose {
+  @apply text-neutral-800 dark:text-neutral-200;
+}
+
+.prose pre {
+  @apply border border-neutral-200 dark:border-neutral-800 bg-neutral-900 text-neutral-100 rounded-xl p-4 my-6 text-sm;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+.prose code {
+  @apply px-1.5 py-0.5 rounded-md bg-neutral-200/60 dark:bg-neutral-800/80 text-neutral-800 dark:text-neutral-200 font-mono text-[0.9em];
+}
+
+.prose pre code {
+  @apply p-0 bg-transparent text-inherit;
+}
+
+/* 移动端表格横向滑动容器 */
+.prose table {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+}
+
+.prose th,
+.prose td {
+  @apply border border-neutral-200 dark:border-neutral-800 px-4 py-2.5 text-left text-sm whitespace-nowrap sm:whitespace-normal;
+}
+
+.prose th {
+  @apply bg-neutral-100 dark:bg-neutral-900 font-semibold;
+}
+
+/* iOS 底部手势指示条安全距离 */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 1rem);
+}

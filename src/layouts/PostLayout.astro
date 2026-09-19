@@ -1,0 +1,66 @@
+---
+import BaseLayout from './BaseLayout.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  date: Date;
+  updatedDate?: Date;
+  tags: string[];
+}
+
+const { title, description, date, updatedDate, tags } = Astro.props;
+
+const formattedDate = new Intl.DateTimeFormat('zh-CN', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+}).format(date);
+---
+
+<BaseLayout title={title} description={description}>
+  <article class="max-w-3xl mx-auto">
+    <!-- 返回按钮 -->
+    <a
+      href="/posts"
+      class="inline-flex items-center gap-1.5 text-sm font-medium text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100 mb-8 transition-colors"
+    >
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+      </svg>
+      返回文章列表
+    </a>
+
+    <!-- 文章标头 -->
+    <header class="mb-10 pb-6 border-b border-neutral-200 dark:border-neutral-800">
+      <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-neutral-900 dark:text-neutral-50 mb-4 leading-tight">
+        {title}
+      </h1>
+
+      <div class="flex flex-wrap items-center gap-4 text-sm text-neutral-500 dark:text-neutral-400">
+        <time datetime={date.toISOString()}>
+          {formattedDate}
+        </time>
+
+        {updatedDate && (
+          <span class="text-xs">
+            (更新于 {new Intl.DateTimeFormat('zh-CN', { year: 'numeric', month: 'numeric', day: 'numeric' }).format(updatedDate)})
+          </span>
+        )}
+
+        <div class="flex flex-wrap items-center gap-2">
+          {tags.map((tag) => (
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-neutral-200/60 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
+              #{tag}
+            </span>
+          ))}
+        </div>
+      </div>
+    </header>
+
+    <!-- Markdown 正文区 -->
+    <div class="prose dark:prose-invert max-w-none">
+      <slot />
+    </div>
+  </article>
+</BaseLayout>

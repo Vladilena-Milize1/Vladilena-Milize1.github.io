@@ -1,0 +1,86 @@
+---
+import { SITE } from '../../site.config';
+import ThemeToggle from '../common/ThemeToggle.astro';
+
+const pathname = Astro.url.pathname;
+---
+
+<header class="sticky top-0 z-40 w-full backdrop-blur-md bg-neutral-50/80 dark:bg-neutral-950/80 border-b border-neutral-200/80 dark:border-neutral-800/80 transition-colors">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+    <!-- 站点 Logo / 标题 -->
+    <a href="/" class="flex items-center gap-2 text-lg font-bold tracking-tight text-neutral-900 dark:text-neutral-50 hover:text-sky-600 dark:hover:text-sky-400 transition-colors">
+      <span class="w-7 h-7 rounded-lg bg-neutral-900 text-neutral-50 dark:bg-neutral-100 dark:text-neutral-900 flex items-center justify-center text-sm font-mono font-black shadow-sm">
+        T
+      </span>
+      <span>{SITE.title}</span>
+    </a>
+
+    <!-- PC 端导航 -->
+    <nav class="hidden md:flex items-center gap-1 text-sm font-medium">
+      {SITE.navItems.map((item) => {
+        const isActive = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
+        return (
+          <a
+            href={item.href}
+            class:list={[
+              "px-3 py-1.5 rounded-md transition-colors",
+              isActive
+                ? "bg-neutral-200/70 text-neutral-900 dark:bg-neutral-800 dark:text-neutral-50 font-semibold"
+                : "text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
+            ]}
+          >
+            {item.title}
+          </a>
+        );
+      })}
+      <div class="ml-3 pl-3 border-l border-neutral-200 dark:border-neutral-800">
+        <ThemeToggle />
+      </div>
+    </nav>
+
+    <!-- 移动端右上角控制区（汉堡菜单 + 主题按钮） -->
+    <div class="flex items-center gap-1 md:hidden">
+      <ThemeToggle />
+      <button
+        id="mobile-menu-button"
+        type="button"
+        class="inline-flex items-center justify-center w-10 h-10 rounded-lg text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200/60 dark:hover:bg-neutral-800 transition-colors focus:outline-none"
+        aria-label="打开菜单"
+      >
+        <svg id="menu-open-icon" class="w-6 h-6 block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+        </svg>
+        <svg id="menu-close-icon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- 移动端下拉折叠菜单 -->
+  <div id="mobile-menu" class="hidden md:hidden border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950 px-4 pt-2 pb-4 space-y-1">
+    {SITE.navItems.map((item) => (
+      <a
+        href={item.href}
+        class="block px-3 py-2.5 rounded-lg text-base font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800/80 transition-colors"
+      >
+        {item.title}
+      </a>
+    ))}
+  </div>
+</header>
+
+<script is:inline>
+  const menuBtn = document.getElementById("mobile-menu-button");
+  const menu = document.getElementById("mobile-menu");
+  const openIcon = document.getElementById("menu-open-icon");
+  const closeIcon = document.getElementById("menu-close-icon");
+
+  if (menuBtn && menu && openIcon && closeIcon) {
+    menuBtn.addEventListener("click", () => {
+      const isHidden = menu.classList.toggle("hidden");
+      openIcon.classList.toggle("hidden", !isHidden);
+      closeIcon.classList.toggle("hidden", isHidden);
+    });
+  }
+</script>
