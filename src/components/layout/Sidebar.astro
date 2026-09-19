@@ -25,11 +25,13 @@ const allTags = [...new Set(posts.flatMap((post) => post.data.tags))];
         {SITE.author}
       </h2>
       <p class="text-xs font-mono text-sky-600 dark:text-sky-400 mt-0.5">
-        @teerain
+        @{SITE.author.toLowerCase()}
       </p>
-      <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-3 leading-relaxed px-1">
-        {SITE.description}
-      </p>
+      {SITE.description && (
+        <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-3 leading-relaxed px-1">
+          {SITE.description}
+        </p>
+      )}
     </div>
 
     <!-- 数据小看板（文章数、标签数） -->

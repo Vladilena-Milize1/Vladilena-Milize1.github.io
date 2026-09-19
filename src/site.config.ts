@@ -20,9 +20,9 @@ export interface SiteConfig {
 }
 
 export const SITE: SiteConfig = {
-  title: "Teerain's Tech Log",
-  author: "Teerain",
-  description: "全栈开发、系统架构与 Rust 探索的个人数字花园",
+  title: "Yanami's Blog",
+  author: "Yanami",
+  description: "",
   siteUrl: "https://example.com",
   navItems: [
     { title: "首页", href: "/" },
