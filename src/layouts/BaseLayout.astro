@@ -1,6 +1,7 @@
 ---
 import Header from '../components/layout/Header.astro';
 import Footer from '../components/layout/Footer.astro';
+import Sidebar from '../components/layout/Sidebar.astro';
 import { SITE } from '../site.config';
 import '../styles/global.css';
 
@@ -8,12 +9,14 @@ interface Props {
   title?: string;
   description?: string;
   ogImage?: string;
+  showSidebar?: boolean;
 }
 
 const {
   title = SITE.title,
   description = SITE.description,
   ogImage = '/og-image.png',
+  showSidebar = true,
 } = Astro.props;
 
 const pageTitle = title === SITE.title ? title : `${title} - ${SITE.title}`;
@@ -67,8 +70,22 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site || 'https://example.
   </head>
   <body class="bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 min-h-screen flex flex-col antialiased selection:bg-sky-500/20 selection:text-sky-600 dark:selection:text-sky-300">
     <Header />
-    <main class="flex-1 w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-      <slot />
+    <main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+      {showSidebar ? (
+        <div class="flex flex-col lg:flex-row gap-8 lg:gap-10 items-start">
+          <!-- 左侧：个人信息与小组件侧边栏 (PC端吸顶) -->
+          <aside class="w-full lg:w-72 lg:shrink-0 lg:sticky lg:top-24 z-10">
+            <Sidebar />
+          </aside>
+
+          <!-- 右侧：页面主要内容承载区 -->
+          <div class="flex-1 min-w-0 w-full">
+            <slot />
+          </div>
+        </div>
+      ) : (
+        <slot />
+      )}
     </main>
     <Footer />
   </body>

@@ -7,13 +7,13 @@ const sortedPosts = posts.sort((a, b) => b.data.date.valueOf() - a.data.date.val
 ---
 
 <BaseLayout title="全部文章" description="这里归档了所有已发表的技术思考、架构探索与教程。">
-  <div class="max-w-3xl mx-auto">
+  <div class="w-full max-w-4xl">
     <header class="mb-10 pb-6 border-b border-neutral-200 dark:border-neutral-800">
       <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-neutral-900 dark:text-neutral-50 mb-3">
-        全部文章
+       Note
       </h1>
       <p class="text-neutral-600 dark:text-neutral-400 text-sm sm:text-base">
-        共计收录 {sortedPosts.length} 篇文章，记录技术成长与工程沉淀。
+        共 {sortedPosts.length} 篇文章。
       </p>
     </header>
 

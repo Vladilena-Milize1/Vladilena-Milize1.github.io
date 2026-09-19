@@ -1,0 +1,117 @@
+---
+import { SITE } from '../../site.config';
+import { getCollection } from 'astro:content';
+
+const posts = await getCollection('blog', ({ data }) => !data.draft);
+const allTags = [...new Set(posts.flatMap((post) => post.data.tags))];
+---
+
+<div class="space-y-6">
+  <!-- 个人主信息卡片 -->
+  <div class="p-6 rounded-2xl bg-white/70 dark:bg-neutral-900/70 backdrop-blur-md border border-neutral-200/80 dark:border-neutral-800/80 shadow-sm transition-all hover:shadow-md">
+    <!-- 头像 / 标志展示 -->
+    <div class="relative w-20 h-20 mx-auto mb-4 group">
+      <div class="absolute -inset-1 rounded-2xl bg-gradient-to-tr from-sky-500 to-indigo-600 opacity-80 blur-sm group-hover:opacity-100 transition-opacity"></div>
+      <div class="relative w-full h-full rounded-2xl bg-neutral-900 dark:bg-neutral-800 text-neutral-50 flex items-center justify-center font-mono font-black text-2xl shadow-inner select-none">
+        {SITE.author.charAt(0).toUpperCase()}
+      </div>
+      <!-- 在线状态光点 -->
+      <span class="absolute bottom-0 right-0 w-4 h-4 rounded-full bg-emerald-500 border-2 border-white dark:border-neutral-900 shadow-sm" title="Online & Coding"></span>
+    </div>
+
+    <!-- 姓名与身份 -->
+    <div class="text-center">
+      <h2 class="text-xl font-bold text-neutral-900 dark:text-neutral-50 tracking-tight">
+        {SITE.author}
+      </h2>
+      <p class="text-xs font-mono text-sky-600 dark:text-sky-400 mt-0.5">
+        @teerain
+      </p>
+      <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-3 leading-relaxed px-1">
+        {SITE.description}
+      </p>
+    </div>
+
+    <!-- 数据小看板（文章数、标签数） -->
+    <div class="grid grid-cols-2 gap-2 my-5 py-3 border-y border-neutral-100 dark:border-neutral-800/80 text-center">
+      <a href="/posts" class="group hover:opacity-80 transition-opacity">
+        <span class="block text-lg font-bold text-neutral-800 dark:text-neutral-100 font-mono">
+          {posts.length}
+        </span>
+        <span class="text-[11px] text-neutral-500 dark:text-neutral-400">公开文章</span>
+      </a>
+      <div class="border-l border-neutral-100 dark:border-neutral-800/80">
+        <span class="block text-lg font-bold text-neutral-800 dark:text-neutral-100 font-mono">
+          {allTags.length}
+        </span>
+        <span class="text-[11px] text-neutral-500 dark:text-neutral-400">关注领域</span>
+      </div>
+    </div>
+
+    <!-- 社交渠道快捷链接 -->
+    <div class="flex items-center justify-center gap-3 text-neutral-600 dark:text-neutral-300">
+      {SITE.socials.github && (
+        <a
+          href={SITE.socials.github}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-neutral-950 dark:hover:text-white transition-colors"
+          title="GitHub"
+        >
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"></path>
+          </svg>
+        </a>
+      )}
+      {SITE.socials.twitter && (
+        <a
+          href={SITE.socials.twitter}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-sky-500 transition-colors"
+          title="Twitter"
+        >
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path>
+          </svg>
+        </a>
+      )}
+      {SITE.socials.email && (
+        <a
+          href={SITE.socials.email}
+          class="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-rose-500 transition-colors"
+          title="Email"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+          </svg>
+        </a>
+      )}
+      <a
+        href="/rss.xml"
+        class="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-amber-500 transition-colors"
+        title="RSS 订阅"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 5c7.18 0 13 5.82 13 13M6 11a7 7 0 017 7m-6 0a1 1 0 11-2 0 1 1 0 012 0z"></path>
+        </svg>
+      </a>
+    </div>
+  </div>
+
+  <!-- 热门标签微模块 -->
+  {allTags.length > 0 && (
+    <div class="p-5 rounded-2xl bg-white/70 dark:bg-neutral-900/70 backdrop-blur-md border border-neutral-200/80 dark:border-neutral-800/80 shadow-sm hidden lg:block">
+      <h3 class="text-xs font-bold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider mb-3">
+        标签云
+      </h3>
+      <div class="flex flex-wrap gap-1.5">
+        {allTags.map((tag) => (
+          <span class="px-2.5 py-1 rounded-md text-xs font-medium bg-neutral-100 dark:bg-neutral-800/90 text-neutral-600 dark:text-neutral-300 hover:bg-sky-50 dark:hover:bg-sky-950/50 hover:text-sky-600 dark:hover:text-sky-400 transition-colors">
+            #{tag}
+          </span>
+        ))}
+      </div>
+    </div>
+  )}
+</div>
