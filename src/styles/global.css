@@ -20,6 +20,16 @@
   }
 }
 
+/* 夜晚模式专属背景壁纸与视差吸附 */
+html.dark body {
+  background-color: #0c0e14;
+  background-image: linear-gradient(to bottom, rgba(10, 12, 18, 0.65), rgba(10, 12, 18, 0.8)), url('/bg-dark.png');
+  background-size: cover;
+  background-position: center top;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+
 /* 响应式排版与代码块防溢出强化 */
 .prose {
   @apply text-neutral-800 dark:text-neutral-200;
