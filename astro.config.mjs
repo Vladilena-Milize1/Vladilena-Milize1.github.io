@@ -4,7 +4,7 @@ import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 
 export default defineConfig({
-  site: 'https://example.com',
+  site: 'https://vladilena-milize1.github.io',
   integrations: [
     tailwind({
       applyBaseStyles: false,

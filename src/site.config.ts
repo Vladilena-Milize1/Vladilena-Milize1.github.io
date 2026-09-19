@@ -27,7 +27,7 @@ export const SITE: SiteConfig = {
   handle: "Vladilena-Milize1",
   avatar: "/avatar.jpg",
   description: "",
-  siteUrl: "https://example.com",
+  siteUrl: "https://vladilena-milize1.github.io",
   navItems: [
     { title: "首页", href: "/" },
     { title: "文章", href: "/posts" },
