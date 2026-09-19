@@ -9,6 +9,7 @@
     "build": "astro check && astro build",
     "preview": "astro preview",
     "post:import": "node scripts/import-post.mjs",
+    "post:watch": "node scripts/watch-drafts.mjs",
     "astro": "astro"
   },
   "dependencies": {

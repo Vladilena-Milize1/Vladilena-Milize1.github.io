@@ -2,12 +2,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import readline from 'node:readline';
+import { execSync } from 'node:child_process';
 import matter from 'gray-matter';
 
 const BLOG_CONTENT_DIR = path.resolve(process.cwd(), 'src/content/blog');
 const PUBLIC_IMAGES_DIR = path.resolve(process.cwd(), 'public/images');
 
-// 确保目标目录存在
 if (!fs.existsSync(BLOG_CONTENT_DIR)) {
   fs.mkdirSync(BLOG_CONTENT_DIR, { recursive: true });
 }
@@ -20,7 +20,6 @@ function formatDate(date) {
   return d.toISOString().split('T')[0];
 }
 
-// 移除 Markdown 标记获取纯文本摘要
 function stripMarkdown(text) {
   return text
     .replace(/!\[.*?\]\(.*?\)/g, '')
@@ -32,21 +31,18 @@ function stripMarkdown(text) {
     .trim();
 }
 
-// 生成安全的 Slug 文件名（处理中文、空格、连续点等 Windows 特殊命名）
 function generateSlug(filename, title) {
   const baseName = path.parse(filename).name;
   let raw = (baseName || title || 'untitled').trim();
-  // 移除开头结尾的点和不安全字符
   raw = raw
     .replace(/[<>:"/\\|?*]/g, '')
-    .replace(/\.+$/g, '') // 移除末尾的点（如 "新建 文本文档..md"）
-    .replace(/\s+/g, '-') // 将空格转为中划线
+    .replace(/\.+$/g, '')
+    .replace(/\s+/g, '-')
     .trim();
   return raw || 'post-' + Date.now();
 }
 
 export function processArticle(sourceFilePath) {
-  // 清理前后可能存在的双引号或单引号
   const cleanPath = sourceFilePath.replace(/^["']|["']$/g, '').trim();
 
   if (!fs.existsSync(cleanPath)) {
@@ -58,14 +54,13 @@ export function processArticle(sourceFilePath) {
   if (stat.isDirectory()) {
     console.log(`\n📁 正在扫描目录: ${cleanPath}`);
     const files = fs.readdirSync(cleanPath);
-    let successCount = 0;
+    let count = 0;
     for (const file of files) {
       if (file.endsWith('.md') || file.endsWith('.mdx')) {
-        const ok = processArticle(path.join(cleanPath, file));
-        if (ok) successCount++;
+        if (processArticle(path.join(cleanPath, file))) count++;
       }
     }
-    return successCount > 0;
+    return count > 0;
   }
 
   if (!cleanPath.endsWith('.md') && !cleanPath.endsWith('.mdx')) {
@@ -80,12 +75,11 @@ export function processArticle(sourceFilePath) {
   let data = { ...parsed.data };
   let content = parsed.content;
 
-  // 1. 自动提取或补全标题
+  // 1. 标题提取
   if (!data.title) {
     const h1Match = content.match(/^#\s+(.+)$/m);
     if (h1Match) {
       data.title = h1Match[1].trim();
-      // 移除原正文中的第一个一级标题，防止渲染时和页面标题重复
       content = content.replace(/^#\s+.+$/m, '').trimStart();
     } else {
       const parsedName = path.parse(cleanPath).name.replace(/\.+$/g, '').trim();
@@ -93,10 +87,10 @@ export function processArticle(sourceFilePath) {
     }
   }
 
-  // 2. 自动生成 Slug
+  // 2. Slug
   const slug = generateSlug(cleanPath, data.title);
 
-  // 3. 自动生成文章摘要 (description)
+  // 3. 摘要
   if (!data.description) {
     const paragraphs = content
       .split(/\n\s*\n/)
@@ -107,32 +101,32 @@ export function processArticle(sourceFilePath) {
       const summary = paragraphs[0];
       data.description = summary.length > 120 ? summary.slice(0, 117) + '...' : summary;
     } else {
-      data.description = `${data.title} - 技术笔记与日常记录`;
+      data.description = `${data.title} - 技术与日常记录`;
     }
   }
 
-  // 4. 自动补齐日期
+  // 4. 日期
   if (!data.date) {
     data.date = formatDate(stat.mtime || new Date());
   } else {
     data.date = formatDate(data.date);
   }
 
-  // 5. 自动补齐标签
+  // 5. 标签
   if (!data.tags || !Array.isArray(data.tags) || data.tags.length === 0) {
     if (typeof data.tags === 'string') {
       data.tags = data.tags.split(/[,，\s]+/).filter(Boolean);
     } else {
-      data.tags = ['日常'];
+      data.tags = ['技术'];
     }
   }
 
-  // 6. 补齐草稿状态
+  // 6. 草稿状态
   if (typeof data.draft !== 'boolean') {
     data.draft = false;
   }
 
-  // 7. 处理本地相对路径图片资产迁移
+  // 7. 图片迁移
   const sourceDir = path.dirname(cleanPath);
   const targetImageDir = path.join(PUBLIC_IMAGES_DIR, slug);
 
@@ -153,12 +147,11 @@ export function processArticle(sourceFilePath) {
       fs.copyFileSync(absImgPath, destImgPath);
       console.log(`  🖼️  图片已迁移: ${cleanImgPath} -> public/images/${slug}/${imgFileName}`);
       return `![${alt}](/images/${slug}/${imgFileName})`;
-    } else {
-      return match;
     }
+    return match;
   });
 
-  // 8. 输出格式化后的 Markdown
+  // 8. 写入文件
   const formattedMarkdown = matter.stringify(content, data);
   const targetFilePath = path.join(BLOG_CONTENT_DIR, `${slug}.md`);
 
@@ -170,34 +163,61 @@ export function processArticle(sourceFilePath) {
   return true;
 }
 
-// 主逻辑
-const args = process.argv.slice(2);
-
-if (args.length > 0) {
-  for (const arg of args) {
-    processArticle(arg);
+// 弹出 Windows 原生文件选择对话框
+function openWindowsFileDialog() {
+  try {
+    const psCmd = `powershell -NoProfile -Sta -Command "Add-Type -AssemblyName System.Windows.Forms; $f = New-Object System.Windows.Forms.OpenFileDialog; $f.Filter = 'Markdown 文件 (*.md;*.mdx)|*.md;*.mdx|所有文件 (*.*)|*.*'; $f.Title = '请选择要导入博客的 Markdown 文章'; if ($f.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) { Write-Output $f.FileName }"`;
+    const selected = execSync(psCmd, { encoding: 'utf-8' }).trim();
+    return selected || null;
+  } catch (err) {
+    return null;
   }
-  console.log('\n🎉 所有文件处理完成！运行 "npm run dev" 或刷新网页即可查看。\n');
-} else {
-  // 无参数时：提供交互式输入提示
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-
-  console.log('======================================================');
-  console.log('              博客文章智能导入向导');
-  console.log('======================================================');
-  rl.question('\n请直接把 Markdown 文件拖入本窗口（或粘贴文件完整路径）并按回车：\n> ', (inputPath) => {
-    rl.close();
-    const target = inputPath.trim();
-    if (!target) {
-      console.log('⚠️ 未输入任何路径，操作已取消。');
-      process.exit(0);
-    }
-    const success = processArticle(target);
-    if (success) {
-      console.log('\n🎉 导入完成！运行 "npm run dev" 即可预览。');
-    }
-  });
 }
+
+import { fileURLToPath } from 'node:url';
+
+// 仅当作为主脚本直接运行时执行命令行交互
+const isDirectRun = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+
+if (isDirectRun) {
+  const args = process.argv.slice(2);
+
+  if (args.length > 0) {
+    for (const arg of args) {
+      processArticle(arg);
+    }
+    console.log('\n🎉 所有文件处理完成！运行 "npm run dev" 即可预览。\n');
+  } else {
+    console.log('======================================================');
+    console.log('              博客文章智能导入工具向导');
+    console.log('======================================================');
+    console.log('提示：');
+    console.log('  1. 你可以直接把 Markdown 文件拖入本控制台窗口按回车');
+    console.log('  2. 或者直接按【回车键】，系统将弹出文件选择窗口供你点选\n');
+
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
+
+    rl.question('请输入文件路径（或直接按回车浏览选择）：\n> ', (inputPath) => {
+      rl.close();
+      let target = inputPath.trim().replace(/^["']|["']$/g, '');
+
+      if (!target) {
+        console.log('\n正在弹出 Windows 文件选择窗口...');
+        target = openWindowsFileDialog();
+        if (!target) {
+          console.log('⚠️ 未选择任何文件，操作已退出。');
+          process.exit(0);
+        }
+      }
+
+      const success = processArticle(target);
+      if (success) {
+        console.log('\n🎉 导入完成！运行 "npm run dev" 即可实时预览。\n');
+      }
+    });
+  }
+}
+
