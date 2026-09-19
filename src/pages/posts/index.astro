@@ -4,55 +4,283 @@ import { getCollection } from 'astro:content';
 
 const posts = await getCollection('blog', ({ data }) => !data.draft);
 const sortedPosts = posts.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+const PAGE_SIZE = 10;
+const totalPosts = sortedPosts.length;
+const totalPages = Math.max(1, Math.ceil(totalPosts / PAGE_SIZE));
 ---
 
 <BaseLayout title="全部文章" description="这里归档了所有已发表的技术思考、架构探索与教程。">
-  <div class="w-full max-w-4xl p-6 sm:p-8 rounded-2xl bg-white/75 dark:bg-neutral-900/75 backdrop-blur-md border border-neutral-200/80 dark:border-neutral-800/80 shadow-sm">
-    <header class="mb-10 pb-6 border-b border-neutral-200 dark:border-neutral-800">
-      <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-neutral-900 dark:text-neutral-50 mb-3">
-       Note
+  <!-- 页面顶部概览卡片 -->
+  <section class="mb-6 p-6 rounded-2xl bg-white/60 dark:bg-neutral-900/60 backdrop-blur-sm border border-neutral-200/70 dark:border-neutral-800/70 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-neutral-50 mb-1 flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-sky-500 inline-block"></span>
+        全部文章
       </h1>
-      <p class="text-neutral-600 dark:text-neutral-400 text-sm sm:text-base">
-        共 {sortedPosts.length} 篇文章。
+      <p class="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400">
+        所有已归档的技术文章、架构探索与随笔思考
       </p>
-    </header>
+    </div>
+    <div class="text-xs font-mono px-3.5 py-1.5 rounded-xl bg-neutral-100/70 dark:bg-neutral-800/70 border border-neutral-200/50 dark:border-neutral-700/50 text-neutral-600 dark:text-neutral-300 shrink-0 self-start sm:self-center shadow-sm">
+      共 <span id="total-count-badge">{totalPosts}</span> 篇 • 每页 {PAGE_SIZE} 篇
+    </div>
+  </section>
 
-    <div class="divide-y divide-neutral-200 dark:divide-neutral-800">
-      {sortedPosts.map((post) => {
-        const formattedDate = new Intl.DateTimeFormat('zh-CN', {
-          year: 'numeric',
-          month: 'short',
-          day: 'numeric',
-        }).format(post.data.date);
+  <!-- 文章卡片列表（完全对齐首页最新文章的独立分隔卡片与透明度） -->
+  <div id="posts-container" class="space-y-4 scroll-mt-28">
+    {sortedPosts.map((post, index) => {
+      const formattedDate = new Intl.DateTimeFormat('zh-CN', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      }).format(post.data.date);
 
-        return (
-          <article class="py-6 first:pt-0 last:pb-0 flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 sm:gap-6 group">
-            <div class="space-y-1.5 flex-1">
-              <h2 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
-                <a href={`/posts/${post.slug}`}>
-                  {post.data.title}
-                </a>
-              </h2>
-              <p class="text-sm text-neutral-600 dark:text-neutral-400 line-clamp-2 leading-relaxed">
-                {post.data.description}
-              </p>
-              <div class="flex flex-wrap gap-2 pt-1">
-                {post.data.tags.map((tag) => (
-                  <span class="px-2 py-0.5 rounded text-xs bg-neutral-100 dark:bg-neutral-800/60 text-neutral-600 dark:text-neutral-400">
-                    #{tag}
-                  </span>
-                ))}
-              </div>
-            </div>
+      // 默认前 10 篇渲染可见，其余先隐藏（客户端 JS 会根据页码精确受控）
+      const isInitiallyVisible = index < PAGE_SIZE;
+
+      return (
+        <article
+          class:list={[
+            "post-card group relative p-5 rounded-2xl bg-white/60 dark:bg-neutral-900/60 backdrop-blur-sm border border-neutral-200/70 dark:border-neutral-800/70 hover:border-sky-500/50 dark:hover:border-sky-500/50 hover:shadow-md transition-all",
+            !isInitiallyVisible && "hidden"
+          ]}
+          data-post-index={index}
+        >
+          <div class="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 mb-2">
+            <h2 class="text-lg font-bold text-neutral-900 dark:text-neutral-100 group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
+              <a href={`/posts/${post.slug}`}>
+                <span class="absolute inset-0 z-10" />
+                {post.data.title}
+              </a>
+            </h2>
             <time
               datetime={post.data.date.toISOString()}
-              class="text-xs sm:text-sm font-mono text-neutral-400 dark:text-neutral-500 shrink-0"
+              class="text-xs font-mono text-neutral-400 dark:text-neutral-500 shrink-0"
             >
               {formattedDate}
             </time>
-          </article>
-        );
-      })}
-    </div>
+          </div>
+          <p class="text-sm text-neutral-600 dark:text-neutral-400 line-clamp-2 leading-relaxed mb-3">
+            {post.data.description}
+          </p>
+          <div class="flex flex-wrap gap-1.5 pt-1">
+            {post.data.tags.map((tag) => (
+              <span class="px-2 py-0.5 rounded-md text-[11px] font-medium bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300">
+                #{tag}
+              </span>
+            ))}
+          </div>
+        </article>
+      );
+    })}
+
+    {totalPosts === 0 && (
+      <div class="p-12 text-center rounded-2xl bg-white/60 dark:bg-neutral-900/60 backdrop-blur-sm border border-neutral-200/70 dark:border-neutral-800/70 text-neutral-400">
+        暂无已发布的文章
+      </div>
+    )}
   </div>
+
+  <!-- 底部动态分页导航条（磨砂半透明） -->
+  <nav
+    id="pagination-nav"
+    class="mt-8 p-4 rounded-2xl bg-white/60 dark:bg-neutral-900/60 backdrop-blur-sm border border-neutral-200/70 dark:border-neutral-800/70 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4"
+    aria-label="文章分页导航"
+    data-total-posts={totalPosts}
+    data-page-size={PAGE_SIZE}
+  >
+    <div class="text-xs text-neutral-500 dark:text-neutral-400 font-medium order-2 sm:order-1">
+      第 <span id="current-page-num" class="font-bold text-neutral-900 dark:text-neutral-100">1</span> / <span id="total-pages-num" class="font-bold text-neutral-900 dark:text-neutral-100">{totalPages}</span> 页
+      <span class="text-neutral-400 dark:text-neutral-500 ml-1.5">(共 {totalPosts} 篇)</span>
+    </div>
+
+    <div class="flex items-center gap-1.5 order-1 sm:order-2">
+      <!-- 上一页 -->
+      <button
+        id="prev-page-btn"
+        type="button"
+        class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-xl border border-neutral-200/80 dark:border-neutral-700/80 bg-white/70 dark:bg-neutral-800/70 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors disabled:opacity-40 disabled:pointer-events-none"
+        aria-label="上一页"
+      >
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+        </svg>
+        <span>上一页</span>
+      </button>
+
+      <!-- 页码数字容器（由脚本根据总页数动态填充） -->
+      <div id="page-numbers-container" class="flex items-center gap-1"></div>
+
+      <!-- 下一页 -->
+      <button
+        id="next-page-btn"
+        type="button"
+        class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-xl border border-neutral-200/80 dark:border-neutral-700/80 bg-white/70 dark:bg-neutral-800/70 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors disabled:opacity-40 disabled:pointer-events-none"
+        aria-label="下一页"
+      >
+        <span>下一页</span>
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+        </svg>
+      </button>
+    </div>
+  </nav>
 </BaseLayout>
+
+<script is:inline>
+  function setupPagination() {
+    const nav = document.getElementById('pagination-nav');
+    const container = document.getElementById('posts-container');
+    if (!nav || !container) return;
+
+    const cards = container.querySelectorAll('.post-card');
+    const totalPosts = cards.length;
+    const pageSize = parseInt(nav.dataset.pageSize || '10', 10);
+    // 最小不小于 1
+    const totalPages = Math.max(1, Math.ceil(totalPosts / pageSize));
+
+    const currentPageNumEl = document.getElementById('current-page-num');
+    const totalPagesNumEl = document.getElementById('total-pages-num');
+    const prevBtn = document.getElementById('prev-page-btn');
+    const nextBtn = document.getElementById('next-page-btn');
+    const numbersContainer = document.getElementById('page-numbers-container');
+
+    if (totalPagesNumEl) {
+      totalPagesNumEl.textContent = String(totalPages);
+    }
+
+    function getPageFromURL() {
+      const params = new URLSearchParams(window.location.search);
+      const page = parseInt(params.get('page') || '1', 10);
+      if (isNaN(page) || page < 1) return 1;
+      if (page > totalPages) return totalPages;
+      return page;
+    }
+
+    let currentPage = getPageFromURL();
+
+    function renderPage(page, shouldScroll = false) {
+      currentPage = Math.max(1, Math.min(page, totalPages));
+
+      // 更新卡片可见性 (一页最多 10 篇)
+      const startIndex = (currentPage - 1) * pageSize;
+      const endIndex = startIndex + pageSize;
+
+      cards.forEach((card, idx) => {
+        if (idx >= startIndex && idx < endIndex) {
+          card.classList.remove('hidden');
+        } else {
+          card.classList.add('hidden');
+        }
+      });
+
+      // 更新当前页码显示
+      if (currentPageNumEl) {
+        currentPageNumEl.textContent = String(currentPage);
+      }
+
+      // 禁用/启用 上一页 / 下一页
+      if (prevBtn) {
+        prevBtn.disabled = currentPage <= 1;
+      }
+      if (nextBtn) {
+        nextBtn.disabled = currentPage >= totalPages;
+      }
+
+      // 动态生成数字按钮
+      renderPageNumbers();
+
+      // 同步 URL 参数
+      const url = new URL(window.location.href);
+      if (currentPage === 1) {
+        url.searchParams.delete('page');
+      } else {
+        url.searchParams.set('page', String(currentPage));
+      }
+      window.history.replaceState({ page: currentPage }, '', url.toString());
+
+      // 平滑滚动回顶部列表起始位置
+      if (shouldScroll) {
+        const topY = container.getBoundingClientRect().top + window.pageYOffset - 100;
+        window.scrollTo({ top: Math.max(0, topY), behavior: 'smooth' });
+      }
+    }
+
+    function renderPageNumbers() {
+      if (!numbersContainer) return;
+      numbersContainer.innerHTML = '';
+
+      // 生成页码序列（当总页数较多时智能显示省略号）
+      const pagesToShow = [];
+      if (totalPages <= 7) {
+        for (let i = 1; i <= totalPages; i++) pagesToShow.push(i);
+      } else {
+        pagesToShow.push(1);
+        let start = Math.max(2, currentPage - 1);
+        let end = Math.min(totalPages - 1, currentPage + 1);
+
+        if (currentPage <= 3) {
+          end = 4;
+        } else if (currentPage >= totalPages - 2) {
+          start = totalPages - 3;
+        }
+
+        if (start > 2) pagesToShow.push('...');
+        for (let i = start; i <= end; i++) pagesToShow.push(i);
+        if (end < totalPages - 1) pagesToShow.push('...');
+        pagesToShow.push(totalPages);
+      }
+
+      pagesToShow.forEach((item) => {
+        if (item === '...') {
+          const dots = document.createElement('span');
+          dots.className = 'px-1.5 text-xs text-neutral-400 select-none';
+          dots.textContent = '…';
+          numbersContainer.appendChild(dots);
+        } else {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          const isCurrent = item === currentPage;
+          btn.className = `w-8 h-8 flex items-center justify-center text-xs font-semibold rounded-xl transition-all ${
+            isCurrent
+              ? 'bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900 shadow-sm scale-105'
+              : 'border border-neutral-200/80 dark:border-neutral-700/80 bg-white/70 dark:bg-neutral-800/70 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700'
+          }`;
+          btn.textContent = String(item);
+          btn.setAttribute('aria-label', `跳转到第 ${item} 页`);
+          if (isCurrent) btn.setAttribute('aria-current', 'page');
+          btn.addEventListener('click', () => {
+            if (item !== currentPage) {
+              renderPage(item, true);
+            }
+          });
+          numbersContainer.appendChild(btn);
+        }
+      });
+    }
+
+    if (prevBtn) {
+      prevBtn.onclick = () => {
+        if (currentPage > 1) renderPage(currentPage - 1, true);
+      };
+    }
+
+    if (nextBtn) {
+      nextBtn.onclick = () => {
+        if (currentPage < totalPages) renderPage(currentPage + 1, true);
+      };
+    }
+
+    // 浏览器前进/后退事件响应
+    window.onpopstate = () => {
+      renderPage(getPageFromURL(), false);
+    };
+
+    // 首次渲染执行
+    renderPage(currentPage, false);
+  }
+
+  setupPagination();
+  document.addEventListener('astro:page-load', setupPagination);
+</script>

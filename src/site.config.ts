@@ -6,6 +6,8 @@ export interface NavItem {
 export interface SiteConfig {
   title: string;
   author: string;
+  handle: string;
+  avatar: string;
   description: string;
   siteUrl: string;
   navItems: NavItem[];
@@ -20,8 +22,10 @@ export interface SiteConfig {
 }
 
 export const SITE: SiteConfig = {
-  title: "Yanami's Blog",
+  title: "Vladilena-Milize1",
   author: "Yanami",
+  handle: "Vladilena-Milize1",
+  avatar: "/avatar.jpg",
   description: "",
   siteUrl: "https://example.com",
   navItems: [
@@ -38,4 +42,3 @@ export const SITE: SiteConfig = {
     sinceYear: 2026,
   },
 };
-

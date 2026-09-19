@@ -19,7 +19,8 @@ const {
   showSidebar = true,
 } = Astro.props;
 
-const pageTitle = title === SITE.title ? title : `${title} - ${SITE.title}`;
+const isHomepage = Astro.url.pathname === '/';
+const pageTitle = isHomepage ? 'Vladilena-Milize1' : (title === SITE.title ? title : `${title} - ${SITE.title}`);
 const canonicalURL = new URL(Astro.url.pathname, Astro.site || 'https://example.com');
 ---
 
@@ -29,6 +30,9 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site || 'https://example.
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/jpeg" href="/avatar.jpg" />
+    <link rel="apple-touch-icon" href="/avatar.jpg" />
+    <link rel="shortcut icon" href="/favicon.ico" />
     <link rel="canonical" href={canonicalURL} />
     <meta name="generator" content={Astro.generator} />
 
@@ -50,7 +54,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site || 'https://example.
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImage} />
 
-    <!-- 防暗黑模式白屏闪烁脚本（最优先注入） -->
+    <!-- 防白屏闪烁与沉浸式阅读模式持久化加载脚本（最优先注入，渲染前执行） -->
     <script is:inline>
       const theme = (() => {
         if (typeof localStorage !== "undefined" && localStorage.getItem("theme")) {
@@ -66,20 +70,54 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site || 'https://example.
       } else {
         document.documentElement.classList.remove("dark");
       }
+
+      // 跨页面保持沉浸式阅读模式状态一致，防止跳转页面时回退
+      if (typeof localStorage !== "undefined" && localStorage.getItem("zen-mode") === "true") {
+        document.documentElement.classList.add("zen-mode");
+      }
     </script>
   </head>
   <body class="bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 min-h-screen flex flex-col antialiased selection:bg-sky-500/20 selection:text-sky-600 dark:selection:text-sky-300">
+    <!-- 沉浸式阅读模式浮动退出控制条 -->
+    <div
+      id="zen-exit-pill"
+      class="fixed top-5 right-5 z-50 hidden items-center gap-2 px-4 py-2 rounded-full bg-neutral-900/85 dark:bg-neutral-800/85 text-white backdrop-blur-xl border border-neutral-200/40 dark:border-white/20 shadow-2xl hover:scale-105 transition-all cursor-pointer select-none group"
+      title="退出沉浸式阅读模式 (快捷键: Esc)"
+    >
+      <svg class="w-4 h-4 text-sky-400 group-hover:rotate-90 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+      </svg>
+      <span class="text-xs font-semibold">退出沉浸模式</span>
+      <kbd class="px-1.5 py-0.5 rounded bg-white/20 text-[10px] font-mono text-neutral-200">Esc</kbd>
+    </div>
+
+    <!-- 纯享壁纸模式浮动恢复提示/退出条 -->
+    <div
+      id="wallpaper-exit-pill"
+      class="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 hidden items-center gap-2.5 px-5 py-2.5 rounded-full bg-neutral-900/85 dark:bg-neutral-800/85 text-white backdrop-blur-xl border border-neutral-200/40 dark:border-white/20 shadow-2xl hover:scale-105 transition-all cursor-pointer select-none group"
+      title="点击任意处或按 Esc 恢复页面内容"
+    >
+      <svg class="w-4 h-4 text-sky-400 group-hover:rotate-90 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+      </svg>
+      <span class="text-xs font-semibold">壁纸纯享模式 • 点击任意处或按 Esc 恢复</span>
+      <kbd class="px-1.5 py-0.5 rounded bg-white/20 text-[10px] font-mono text-neutral-200">Esc</kbd>
+    </div>
+
+    <!-- 顶部固定导航栏 -->
     <Header />
-    <main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+
+    <!-- 主体区域：pt-20 确保内容不被 fixed 导航栏遮挡 -->
+    <main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 pb-8 sm:pb-12">
       {showSidebar ? (
         <div class="flex flex-col lg:flex-row gap-8 lg:gap-10 items-start">
-          <!-- 左侧：个人信息与小组件侧边栏 (PC端吸顶) -->
-          <aside class="w-full lg:w-72 lg:shrink-0 lg:sticky lg:top-24 z-10">
+          <!-- 左侧：时刻固定的个人信息侧边栏 (固定在顶部导航栏下方) -->
+          <aside id="blog-sidebar" class="w-full lg:w-72 lg:shrink-0 lg:sticky lg:top-24 z-20">
             <Sidebar />
           </aside>
 
           <!-- 右侧：页面主要内容承载区 -->
-          <div class="flex-1 min-w-0 w-full">
+          <div id="blog-main-content" class="flex-1 min-w-0 w-full transition-all duration-300">
             <slot />
           </div>
         </div>
@@ -88,5 +126,112 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site || 'https://example.
       )}
     </main>
     <Footer />
+
+    <script is:inline>
+      function setupZenMode() {
+        const toggles = document.querySelectorAll('.zen-mode-toggle');
+        const exitPill = document.getElementById('zen-exit-pill');
+
+        function setZenMode(enable) {
+          if (enable) {
+            document.documentElement.classList.add('zen-mode');
+            localStorage.setItem('zen-mode', 'true');
+            if (exitPill) {
+              exitPill.classList.remove('hidden');
+              exitPill.classList.add('flex');
+            }
+          } else {
+            document.documentElement.classList.remove('zen-mode');
+            localStorage.setItem('zen-mode', 'false');
+            if (exitPill) {
+              exitPill.classList.remove('flex');
+              exitPill.classList.add('hidden');
+            }
+          }
+        }
+
+        // 页面初始化时检查沉浸状态
+        const isZenActive = document.documentElement.classList.contains('zen-mode');
+        if (isZenActive && exitPill) {
+          exitPill.classList.remove('hidden');
+          exitPill.classList.add('flex');
+        }
+
+        toggles.forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const isZen = document.documentElement.classList.contains('zen-mode');
+            setZenMode(!isZen);
+          });
+        });
+
+        if (exitPill) {
+          exitPill.addEventListener('click', () => setZenMode(false));
+        }
+
+        window.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && document.documentElement.classList.contains('zen-mode')) {
+            setZenMode(false);
+          }
+        });
+      }
+
+      function setupWallpaperMode() {
+        const toggles = document.querySelectorAll('.wallpaper-mode-toggle');
+        const exitPill = document.getElementById('wallpaper-exit-pill');
+
+        function setWallpaperMode(enable) {
+          if (enable) {
+            document.documentElement.classList.add('wallpaper-mode');
+            if (exitPill) {
+              exitPill.classList.remove('hidden');
+              exitPill.classList.add('flex');
+            }
+          } else {
+            document.documentElement.classList.remove('wallpaper-mode');
+            if (exitPill) {
+              exitPill.classList.remove('flex');
+              exitPill.classList.add('hidden');
+            }
+          }
+        }
+
+        toggles.forEach((btn) => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isWallpaper = document.documentElement.classList.contains('wallpaper-mode');
+            setWallpaperMode(!isWallpaper);
+          });
+        });
+
+        if (exitPill) {
+          exitPill.addEventListener('click', (e) => {
+            e.stopPropagation();
+            setWallpaperMode(false);
+          });
+        }
+
+        // 点击背景任意空白处恢复内容
+        window.addEventListener('click', (e) => {
+          if (document.documentElement.classList.contains('wallpaper-mode')) {
+            if (!e.target.closest('.wallpaper-mode-toggle')) {
+              setWallpaperMode(false);
+            }
+          }
+        });
+
+        window.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && document.documentElement.classList.contains('wallpaper-mode')) {
+            setWallpaperMode(false);
+          }
+        });
+      }
+
+      setupZenMode();
+      setupWallpaperMode();
+      document.addEventListener('astro:page-load', () => {
+        setupZenMode();
+        setupWallpaperMode();
+      });
+    </script>
   </body>
 </html>

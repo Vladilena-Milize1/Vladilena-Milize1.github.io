@@ -13,21 +13,70 @@
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
-  /* 移动端彻底杜绝横向摇晃 */
-  body,
-  html {
-    overflow-x: hidden;
+  /* 移动端彻底杜绝横向摇晃，且不破坏 position: sticky */
+  html,
+  body {
+    overflow-x: clip;
   }
 }
 
 /* 夜晚模式专属背景壁纸与视差吸附 */
 html.dark body {
   background-color: #0c0e14;
-  background-image: linear-gradient(to bottom, rgba(10, 12, 18, 0.65), rgba(10, 12, 18, 0.8)), url('/bg-dark.png');
+  background-image: linear-gradient(to bottom, rgba(10, 12, 18, 0.45), rgba(10, 12, 18, 0.65)), url('/bg-dark.webp');
   background-size: cover;
   background-position: center top;
   background-attachment: fixed;
   background-repeat: no-repeat;
+}
+
+/* 沉浸式阅读模式 (Zen Mode) */
+header {
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease, background-color 0.35s ease;
+}
+
+main, footer {
+  transition: padding-top 0.35s ease, opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.4s ease;
+}
+
+html.zen-mode header {
+  transform: translateY(-100%) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+html.zen-mode main {
+  padding-top: 2rem !important;
+}
+
+html.zen-mode #blog-sidebar {
+  display: none !important;
+}
+
+html.zen-mode #blog-main-content {
+  max-width: 56rem !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+/* 纯享壁纸模式：隐藏页面内容以显示完整背景 */
+html.wallpaper-mode main,
+html.wallpaper-mode footer {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+html.wallpaper-mode header {
+  background-color: rgba(0, 0, 0, 0.15) !important;
+  backdrop-filter: blur(8px) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  box-shadow: none !important;
+}
+
+html.wallpaper-mode .wallpaper-mode-toggle {
+  background-color: rgba(14, 165, 233, 0.25) !important;
+  color: rgb(56, 189, 248) !important;
 }
 
 /* 响应式排版与代码块防溢出强化 */

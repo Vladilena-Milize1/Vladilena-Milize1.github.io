@@ -3,50 +3,37 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import { SITE } from '../site.config';
 ---
 
-<BaseLayout title="关于我" description={`关于 ${SITE.author} 与本博客的介绍`}>
-  <div class="w-full max-w-4xl p-6 sm:p-10 rounded-2xl bg-white/75 dark:bg-neutral-900/75 backdrop-blur-md border border-neutral-200/80 dark:border-neutral-800/80 shadow-sm">
-    <header class="mb-10 pb-6 border-b border-neutral-200 dark:border-neutral-800">
-      <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-neutral-900 dark:text-neutral-50 mb-3">
-        关于我
+<BaseLayout title="关于" description={`关于 ${SITE.author} 的介绍页面`}>
+  <div class="w-full max-w-4xl p-6 sm:p-8 rounded-2xl bg-white/60 dark:bg-neutral-900/60 backdrop-blur-sm border border-neutral-200/70 dark:border-neutral-800/70 shadow-sm">
+    <header class="mb-8 pb-6 border-b border-neutral-200/60 dark:border-neutral-800/60">
+      <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-neutral-50 mb-2">
+        关于
       </h1>
-      <p class="text-neutral-600 dark:text-neutral-400">
-        Hi, 这里是 {SITE.author} 的个人数字空间。
+      <p class="text-neutral-600 dark:text-neutral-400 text-sm">
+        [关于页简介占位符 / About Description Placeholder]
       </p>
     </header>
 
-    <div class="prose dark:prose-invert max-w-none space-y-6">
+    <div class="prose dark:prose-invert max-w-none space-y-6 text-sm sm:text-base leading-relaxed text-neutral-700 dark:text-neutral-300">
       <p>
-        搭建这个博客的初衷是沉淀技术实践、记录认知迭代与生活随笔，并将其作为一个可供长期维护与演进的个人数字化空间。
+        [此处为个人介绍占位内容。后续可以在此替换为您自己的个人简介、建站初衷、日常随想或其它希望展示的文本信息。]
       </p>
 
-      <h2>技术偏好</h2>
-      <ul>
-        <li><strong>语言与架构</strong>：TypeScript、Rust、Go、Node.js</li>
-        <li><strong>前端与全栈</strong>：Astro、React、Tailwind CSS、Next.js</li>
-        <li><strong>工程与运维</strong>：GitOps、Docker、Cloudflare Pages、GitHub Actions</li>
+      <h2 class="text-lg font-bold text-neutral-900 dark:text-neutral-100 mt-6 mb-3">
+        [兴趣领域 / 技术偏好占位标题]
+      </h2>
+      <ul class="list-disc list-inside space-y-1.5 text-neutral-600 dark:text-neutral-400">
+        <li><strong>[技术领域 1]</strong>: [占位描述内容]</li>
+        <li><strong>[技术领域 2]</strong>: [占位描述内容]</li>
+        <li><strong>[技术领域 3]</strong>: [占位描述内容]</li>
       </ul>
 
-      <h2>联系方式</h2>
-      <p>
-        如果你对我写的内容有任何疑问、探讨建议或合作交流，欢迎随时通过以下方式与我取得联系：
+      <h2 class="text-lg font-bold text-neutral-900 dark:text-neutral-100 mt-6 mb-3">
+        [交流与联系占位标题]
+      </h2>
+      <p class="text-neutral-600 dark:text-neutral-400">
+        [此处为联系说明占位文本。可以在后续补充您的公开联系途径、社交账号或邮箱信息。]
       </p>
-      <ul>
-        {SITE.socials.github && (
-          <li>
-            GitHub: <a href={SITE.socials.github} target="_blank" rel="noopener noreferrer">{SITE.socials.github}</a>
-          </li>
-        )}
-        {SITE.socials.twitter && (
-          <li>
-            Twitter: <a href={SITE.socials.twitter} target="_blank" rel="noopener noreferrer">{SITE.socials.twitter}</a>
-          </li>
-        )}
-        {SITE.socials.email && (
-          <li>
-            Email: <a href={SITE.socials.email}>{SITE.socials.email.replace('mailto:', '')}</a>
-          </li>
-        )}
-      </ul>
     </div>
   </div>
 </BaseLayout>

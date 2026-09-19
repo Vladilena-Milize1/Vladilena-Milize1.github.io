@@ -1,0 +1,179 @@
+---
+interface Props {
+  class?: string;
+}
+
+const { class: className = "" } = Astro.props;
+---
+
+<div class:list={["relative", className]} data-search-root>
+  <div class="relative flex items-center">
+    <svg
+      class="absolute left-3 w-4 h-4 text-neutral-400 dark:text-neutral-500 pointer-events-none"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+      ></path>
+    </svg>
+    <input
+      type="search"
+      placeholder="搜索文章标题..."
+      autocomplete="off"
+      class="w-full sm:w-44 md:w-52 lg:w-64 focus:sm:w-56 focus:md:w-64 focus:lg:w-72 transition-all duration-200 pl-9 pr-7 py-1.5 text-xs rounded-xl bg-neutral-100/70 dark:bg-white/10 hover:bg-neutral-100 dark:hover:bg-white/15 focus:bg-white dark:focus:bg-neutral-900 border border-neutral-200/70 dark:border-white/10 focus:border-sky-500/70 dark:focus:border-sky-500/70 text-neutral-800 dark:text-neutral-100 placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 backdrop-blur-md"
+      data-search-input
+    />
+    <button
+      type="button"
+      class="absolute right-2 hidden text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 text-xs"
+      data-search-clear
+      aria-label="清空输入"
+    >
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+      </svg>
+    </button>
+  </div>
+
+  <!-- 下拉结果框 -->
+  <div
+    class="absolute right-0 sm:right-auto sm:left-0 top-full mt-2 w-80 sm:w-88 md:w-96 max-h-80 overflow-y-auto rounded-2xl bg-white/95 dark:bg-neutral-900/95 backdrop-blur-2xl border border-neutral-200/80 dark:border-neutral-800/80 shadow-2xl p-2 hidden z-50 divide-y divide-neutral-100 dark:divide-neutral-800/60"
+    data-search-dropdown
+  >
+    <div data-search-results class="space-y-1"></div>
+  </div>
+</div>
+
+<script is:inline>
+  (() => {
+    let cachedIndex = null;
+
+    async function getIndex() {
+      if (cachedIndex) return cachedIndex;
+      try {
+        const res = await fetch('/search-index.json');
+        cachedIndex = await res.json();
+        return cachedIndex;
+      } catch (err) {
+        console.error('Failed to fetch search-index.json:', err);
+        return [];
+      }
+    }
+
+    function highlightText(text, query) {
+      if (!query) return text;
+      const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`(${escaped})`, 'gi');
+      return text.replace(regex, '<span class="text-sky-600 dark:text-sky-400 font-semibold bg-sky-500/15 dark:bg-sky-400/20 rounded px-0.5">$1</span>');
+    }
+
+    function initSearchRoots() {
+      const roots = document.querySelectorAll('[data-search-root]');
+      roots.forEach((root) => {
+        if (root.dataset.initialized) return;
+        root.dataset.initialized = 'true';
+
+        const input = root.querySelector('[data-search-input]');
+        const clearBtn = root.querySelector('[data-search-clear]');
+        const dropdown = root.querySelector('[data-search-dropdown]');
+        const resultsBox = root.querySelector('[data-search-results]');
+
+        if (!input || !dropdown || !resultsBox) return;
+
+        // 聚焦时静默预加载索引
+        input.addEventListener('focus', () => {
+          getIndex();
+          if (input.value.trim().length > 0) {
+            performSearch(input.value.trim());
+          }
+        });
+
+        async function performSearch(query) {
+          if (!query) {
+            dropdown.classList.add('hidden');
+            if (clearBtn) clearBtn.classList.add('hidden');
+            resultsBox.innerHTML = '';
+            return;
+          }
+
+          if (clearBtn) clearBtn.classList.remove('hidden');
+
+          const index = await getIndex();
+          const queryLower = query.toLowerCase();
+          // 严格仅以文章标题做匹配检索
+          const matches = index.filter((item) =>
+            item.title.toLowerCase().includes(queryLower)
+          );
+
+          dropdown.classList.remove('hidden');
+
+          if (matches.length === 0) {
+            resultsBox.innerHTML = `
+              <div class="px-4 py-6 text-center text-xs text-neutral-400 dark:text-neutral-500">
+                未找到标题包含「<span class="text-neutral-600 dark:text-neutral-300 font-medium">${query}</span>」的文章
+              </div>
+            `;
+            return;
+          }
+
+          resultsBox.innerHTML = `
+            <div class="px-2.5 py-1 text-[10px] font-mono uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
+              匹配文章 (${matches.length})
+            </div>
+            ${matches.slice(0, 10).map((post) => `
+              <a
+                href="/posts/${post.slug}"
+                class="flex flex-col gap-1 px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800/80 transition-colors group block"
+              >
+                <span class="text-xs font-semibold text-neutral-800 dark:text-neutral-200 group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors leading-snug">
+                  ${highlightText(post.title, query)}
+                </span>
+                <div class="flex items-center gap-2 text-[10px] text-neutral-400 dark:text-neutral-500">
+                  <span class="font-mono">${post.date}</span>
+                  ${post.tags && post.tags.length ? `<span>•</span><span>#${post.tags[0]}</span>` : ''}
+                </div>
+              </a>
+            `).join('')}
+          `;
+        }
+
+        input.addEventListener('input', (e) => {
+          performSearch(e.target.value.trim());
+        });
+
+        if (clearBtn) {
+          clearBtn.addEventListener('click', () => {
+            input.value = '';
+            performSearch('');
+            input.focus();
+          });
+        }
+
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') {
+            dropdown.classList.add('hidden');
+          } else if (e.key === 'Enter') {
+            const firstLink = resultsBox.querySelector('a');
+            if (firstLink) {
+              firstLink.click();
+            }
+          }
+        });
+
+        document.addEventListener('click', (e) => {
+          if (!root.contains(e.target)) {
+            dropdown.classList.add('hidden');
+          }
+        });
+      });
+    }
+
+    initSearchRoots();
+    document.addEventListener('astro:page-load', initSearchRoots);
+  })();
+</script>
