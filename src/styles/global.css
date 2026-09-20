@@ -1,3 +1,4 @@
+@import "katex/dist/katex.min.css";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -121,4 +122,17 @@ html.wallpaper-mode .wallpaper-mode-toggle {
 /* iOS 底部手势指示条安全距离 */
 .safe-bottom {
   padding-bottom: env(safe-area-inset-bottom, 1rem);
+}
+
+/* KaTeX 数学公式自适应排版与横向滚动保护 */
+.katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.5rem 0;
+  margin: 1.25rem 0 !important;
+}
+
+.katex {
+  font-size: 1.05em;
+  text-rendering: auto;
 }

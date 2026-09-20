@@ -36,6 +36,13 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site || 'https://example.
     <link rel="canonical" href={canonicalURL} />
     <meta name="generator" content={Astro.generator} />
 
+    <!-- KaTeX 数学公式渲染样式 -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"
+      crossorigin="anonymous"
+    />
+
     <!-- SEO 元标签 -->
     <title>{pageTitle}</title>
     <meta name="description" content={description} />

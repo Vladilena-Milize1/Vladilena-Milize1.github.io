@@ -24,6 +24,10 @@ function stripMarkdown(text) {
   return text
     .replace(/!\[.*?\]\(.*?\)/g, '')
     .replace(/\[(.*?)\]\(.*?\)/g, '$1')
+    .replace(/\\\[[\s\S]*?\\\]/g, '')
+    .replace(/\$\$[\s\S]*?\$\$/g, '')
+    .replace(/\\\(([\s\S]*?)\\\)/g, '$1')
+    .replace(/\$([^\$]+)\$/g, '$1')
     .replace(/`{1,3}.*?`{1,3}/gs, '')
     .replace(/#{1,6}\s+/g, '')
     .replace(/[*_~>]/g, '')
