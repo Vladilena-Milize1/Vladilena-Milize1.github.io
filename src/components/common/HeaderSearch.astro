@@ -6,53 +6,188 @@ interface Props {
 const { class: className = "" } = Astro.props;
 ---
 
-<div class:list={["relative", className]} data-search-root>
-  <div class="relative flex items-center">
-    <svg
-      class="absolute left-3 w-4 h-4 text-neutral-400 dark:text-neutral-500 pointer-events-none"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <path
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        stroke-width="2"
-        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-      ></path>
+<!-- 顶部常驻搜索唤起按钮 -->
+<button
+  type="button"
+  data-search-open-btn
+  class:list={[
+    "w-full flex items-center justify-between gap-2.5 px-3 py-1.5 text-xs rounded-xl",
+    "bg-neutral-100/70 hover:bg-neutral-200/70 dark:bg-white/10 dark:hover:bg-white/15",
+    "border border-neutral-200/70 dark:border-white/10 text-neutral-500 dark:text-neutral-400",
+    "transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-sky-500/30",
+    "cursor-pointer group select-none",
+    className,
+  ]}
+  title="搜索文章 (Ctrl + K)"
+  aria-label="打开搜索 (快捷键: Ctrl + K)"
+>
+  <div class="flex items-center gap-2 truncate">
+    <svg class="w-3.5 h-3.5 shrink-0 text-neutral-400 group-hover:text-sky-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
     </svg>
-    <input
-      type="search"
-      placeholder="搜索文章标题..."
-      autocomplete="off"
-      class="w-full sm:w-44 md:w-52 lg:w-64 focus:sm:w-56 focus:md:w-64 focus:lg:w-72 transition-all duration-200 pl-9 pr-7 py-1.5 text-xs rounded-xl bg-neutral-100/70 dark:bg-white/10 hover:bg-neutral-100 dark:hover:bg-white/15 focus:bg-white dark:focus:bg-neutral-900 border border-neutral-200/70 dark:border-white/10 focus:border-sky-500/70 dark:focus:border-sky-500/70 text-neutral-800 dark:text-neutral-100 placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 backdrop-blur-md"
-      data-search-input
-    />
-    <button
-      type="button"
-      class="absolute right-2 hidden text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 text-xs"
-      data-search-clear
-      aria-label="清空输入"
-    >
-      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-      </svg>
-    </button>
+    <span class="truncate text-neutral-500 dark:text-neutral-400 group-hover:text-neutral-700 dark:group-hover:text-neutral-200 transition-colors">
+      搜索文章...
+    </span>
   </div>
+  <kbd class="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-mono text-neutral-400 dark:text-neutral-400 bg-neutral-200/60 dark:bg-neutral-800/80 rounded border border-neutral-300/60 dark:border-neutral-700/60 group-hover:border-sky-400/40 transition-colors" data-search-kbd>
+    Ctrl K
+  </kbd>
+</button>
 
-  <!-- 下拉结果框 -->
+<!-- 屏幕中央模态搜索弹窗 (Spotlight / Command Palette) -->
+<div
+  id="search-modal"
+  class="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-3 sm:p-4 md:p-6 backdrop-blur-md bg-neutral-950/60 transition-opacity duration-200 opacity-0 pointer-events-none"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="search-modal-title"
+>
   <div
-    class="absolute right-0 sm:right-auto sm:left-0 top-full mt-2 w-80 sm:w-88 md:w-96 max-h-80 overflow-y-auto rounded-2xl bg-white/95 dark:bg-neutral-900/95 backdrop-blur-2xl border border-neutral-200/80 dark:border-neutral-800/80 shadow-2xl p-2 hidden z-50 divide-y divide-neutral-100 dark:divide-neutral-800/60"
-    data-search-dropdown
+    class="w-full max-w-2xl bg-white/95 dark:bg-neutral-900/95 backdrop-blur-2xl border border-neutral-200/90 dark:border-neutral-700/80 shadow-2xl rounded-2xl overflow-hidden flex flex-col max-h-[88vh] sm:max-h-[82vh] transition-transform duration-200 scale-95"
+    data-search-modal-container
   >
-    <div data-search-results class="space-y-1"></div>
+    <!-- 弹窗顶部输入与模式切换区 -->
+    <div class="p-3.5 sm:p-4 border-b border-neutral-200/80 dark:border-neutral-800 space-y-3">
+      <!-- 搜索输入栏 -->
+      <div class="relative flex items-center">
+        <svg class="absolute left-3 w-5 h-5 text-sky-500 shrink-0 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+
+        <input
+          id="search-modal-input"
+          type="search"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="输入关键词进行搜索..."
+          class="w-full pl-10 pr-16 py-2.5 text-sm sm:text-base bg-transparent text-neutral-900 dark:text-neutral-50 placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none"
+        />
+
+        <div class="absolute right-2 flex items-center gap-1.5">
+          <button
+            type="button"
+            id="search-clear-btn"
+            class="hidden p-1 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 transition-colors"
+            title="清空输入"
+            aria-label="清空输入"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            id="search-close-btn"
+            class="px-2 py-0.5 text-xs text-neutral-400 dark:text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-200 bg-neutral-100 dark:bg-neutral-800 rounded border border-neutral-200 dark:border-neutral-700 transition-colors"
+            title="关闭 (Esc)"
+          >
+            ESC
+          </button>
+        </div>
+      </div>
+
+      <!-- 匹配模式切换器 (Tab 胶囊栏) -->
+      <div class="flex items-center justify-between pt-1 text-xs">
+        <div class="flex items-center gap-1.5 p-1 bg-neutral-100/90 dark:bg-neutral-800/80 rounded-xl border border-neutral-200/70 dark:border-neutral-700/60" role="tablist">
+          <button
+            type="button"
+            role="tab"
+            data-search-mode="title"
+            aria-selected="true"
+            class="search-mode-pill px-3 py-1 rounded-lg font-medium transition-all duration-150 flex items-center gap-1 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white shadow-sm"
+          >
+            <span>📌</span>
+            <span>仅标题匹配</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            data-search-mode="content"
+            aria-selected="false"
+            class="search-mode-pill px-3 py-1 rounded-lg font-medium transition-all duration-150 flex items-center gap-1 text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200"
+          >
+            <span>📄</span>
+            <span>全文内容匹配</span>
+          </button>
+        </div>
+
+        <div class="hidden sm:flex items-center gap-1 text-[11px] text-neutral-400 dark:text-neutral-500">
+          <span>提示：按</span>
+          <kbd class="px-1 py-0.5 rounded bg-neutral-200/60 dark:bg-neutral-800 font-mono text-[10px]">Tab</kbd>
+          <span>快速切换模式</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 搜索结果列表区 -->
+    <div
+      id="search-results-container"
+      class="flex-1 overflow-y-auto p-3 space-y-1.5 min-h-[160px] max-h-[50vh] divide-y-0"
+    >
+      <!-- 初始欢迎 / 空状态 -->
+      <div id="search-idle-state" class="py-10 text-center space-y-2">
+        <div class="text-3xl select-none">🔍</div>
+        <p class="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400">
+          键入关键词，即刻检索博客文章
+        </p>
+        <p class="text-[11px] text-neutral-400 dark:text-neutral-500">
+          支持快速过滤文章标题，或切换到「全文内容」模式深度检索正文
+        </p>
+      </div>
+
+      <!-- 动态结果挂载容器 -->
+      <div id="search-results-list" class="space-y-1.5 hidden"></div>
+
+      <!-- 无匹配结果状态 -->
+      <div id="search-empty-state" class="py-10 text-center space-y-2 hidden">
+        <div class="text-2xl select-none">📭</div>
+        <p class="text-xs sm:text-sm text-neutral-600 dark:text-neutral-300 font-medium">
+          未找到匹配的内容
+        </p>
+        <p id="search-empty-tip" class="text-[11px] text-neutral-400 dark:text-neutral-500">
+          若在「仅标题」下未搜到，可尝试切换到「全文内容」模式检索正文
+        </p>
+      </div>
+    </div>
+
+    <!-- 弹窗底部操作指引栏 -->
+    <div class="px-4 py-2.5 border-t border-neutral-200/70 dark:border-neutral-800 bg-neutral-50/80 dark:bg-neutral-900/60 text-[11px] text-neutral-500 dark:text-neutral-400 flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-3">
+        <span class="inline-flex items-center gap-1">
+          <kbd class="px-1 py-0.5 rounded bg-neutral-200/80 dark:bg-neutral-800 font-mono text-[10px]">↑</kbd>
+          <kbd class="px-1 py-0.5 rounded bg-neutral-200/80 dark:bg-neutral-800 font-mono text-[10px]">↓</kbd>
+          <span>移动光标</span>
+        </span>
+        <span class="inline-flex items-center gap-1">
+          <kbd class="px-1.5 py-0.5 rounded bg-neutral-200/80 dark:bg-neutral-800 font-mono text-[10px]">↵</kbd>
+          <span>跳转文章</span>
+        </span>
+        <span class="inline-flex items-center gap-1">
+          <kbd class="px-1.5 py-0.5 rounded bg-neutral-200/80 dark:bg-neutral-800 font-mono text-[10px]">Tab</kbd>
+          <span>切换匹配模式</span>
+        </span>
+      </div>
+      <div id="search-results-count" class="font-mono text-neutral-400 dark:text-neutral-500"></div>
+    </div>
   </div>
 </div>
 
 <script is:inline>
   (() => {
     let cachedIndex = null;
+    let currentMode = 'title'; // 'title' | 'content'
+    let currentMatches = [];
+    let selectedIndex = -1;
 
+    // 智能检测 Mac / Windows 快捷键文案
+    function updateKbdBadges() {
+      const isMac = navigator.userAgent.includes('Mac');
+      document.querySelectorAll('[data-search-kbd]').forEach((el) => {
+        el.textContent = isMac ? '⌘K' : 'Ctrl K';
+      });
+    }
+
+    // 异步预加载全站搜索索引
     async function getIndex() {
       if (cachedIndex) return cachedIndex;
       try {
@@ -60,120 +195,368 @@ const { class: className = "" } = Astro.props;
         cachedIndex = await res.json();
         return cachedIndex;
       } catch (err) {
-        console.error('Failed to fetch search-index.json:', err);
+        console.error('Failed to load search-index.json:', err);
         return [];
       }
     }
 
+    // 高亮文本中的关键词
     function highlightText(text, query) {
-      if (!query) return text;
+      if (!query || !text) return text || '';
       const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const regex = new RegExp(`(${escaped})`, 'gi');
-      return text.replace(regex, '<span class="text-sky-600 dark:text-sky-400 font-semibold bg-sky-500/15 dark:bg-sky-400/20 rounded px-0.5">$1</span>');
+      return text.replace(
+        regex,
+        '<mark class="bg-sky-500/20 text-sky-700 dark:text-sky-300 dark:bg-sky-400/25 px-0.5 py-0.2 rounded font-semibold">$1</mark>'
+      );
     }
 
-    function initSearchRoots() {
-      const roots = document.querySelectorAll('[data-search-root]');
-      roots.forEach((root) => {
-        if (root.dataset.initialized) return;
-        root.dataset.initialized = 'true';
+    // 全文模式下截取包含关键词的上下文片段 (Snippet)
+    function extractSnippet(content, query) {
+      if (!content || !query) return '';
+      const lowerContent = content.toLowerCase();
+      const lowerQuery = query.toLowerCase();
+      const index = lowerContent.indexOf(lowerQuery);
+      if (index === -1) return '';
 
-        const input = root.querySelector('[data-search-input]');
-        const clearBtn = root.querySelector('[data-search-clear]');
-        const dropdown = root.querySelector('[data-search-dropdown]');
-        const resultsBox = root.querySelector('[data-search-results]');
+      const beforeLen = 35;
+      const afterLen = 65;
+      const start = Math.max(0, index - beforeLen);
+      const end = Math.min(content.length, index + query.length + afterLen);
 
-        if (!input || !dropdown || !resultsBox) return;
+      let snippet = content.slice(start, end).trim();
+      if (start > 0) snippet = '...' + snippet;
+      if (end < content.length) snippet = snippet + '...';
 
-        // 聚焦时静默预加载索引
-        input.addEventListener('focus', () => {
-          getIndex();
+      return highlightText(snippet, query);
+    }
+
+    function initSearchSystem() {
+      updateKbdBadges();
+
+      // 避免重复挂载多个模态框冲突
+      const modals = document.querySelectorAll('#search-modal');
+      if (modals.length > 1) {
+        for (let i = 1; i < modals.length; i++) {
+          modals[i].remove();
+        }
+      }
+
+      const modal = document.getElementById('search-modal');
+      const modalContainer = modal ? modal.querySelector('[data-search-modal-container]') : null;
+      const input = document.getElementById('search-modal-input');
+      const clearBtn = document.getElementById('search-clear-btn');
+      const closeBtn = document.getElementById('search-close-btn');
+      const idleState = document.getElementById('search-idle-state');
+      const resultsList = document.getElementById('search-results-list');
+      const emptyState = document.getElementById('search-empty-state');
+      const countDisplay = document.getElementById('search-results-count');
+      const modePills = document.querySelectorAll('.search-mode-pill');
+
+      if (!modal || !input || !modalContainer) return;
+
+      // 打开弹窗
+      function openModal() {
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+        modal.classList.add('opacity-100', 'pointer-events-auto');
+        modalContainer.classList.remove('scale-95');
+        modalContainer.classList.add('scale-100');
+        document.body.style.overflow = 'hidden';
+
+        getIndex(); // 静默预热缓存
+        setTimeout(() => {
+          input.focus();
           if (input.value.trim().length > 0) {
-            performSearch(input.value.trim());
+            executeSearch(input.value.trim());
+          }
+        }, 50);
+      }
+
+      // 关闭弹窗
+      function closeModal() {
+        modal.classList.remove('opacity-100', 'pointer-events-auto');
+        modal.classList.add('opacity-0', 'pointer-events-none');
+        modalContainer.classList.remove('scale-100');
+        modalContainer.classList.add('scale-95');
+        document.body.style.overflow = '';
+        selectedIndex = -1;
+      }
+
+      // 切换匹配模式
+      function switchMode(newMode) {
+        if (currentMode === newMode) return;
+        currentMode = newMode;
+
+        modePills.forEach((btn) => {
+          const isTarget = btn.getAttribute('data-search-mode') === newMode;
+          btn.setAttribute('aria-selected', isTarget ? 'true' : 'false');
+          if (isTarget) {
+            btn.className = 'search-mode-pill px-3 py-1 rounded-lg font-medium transition-all duration-150 flex items-center gap-1 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white shadow-sm';
+          } else {
+            btn.className = 'search-mode-pill px-3 py-1 rounded-lg font-medium transition-all duration-150 flex items-center gap-1 text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200';
           }
         });
 
-        async function performSearch(query) {
-          if (!query) {
-            dropdown.classList.add('hidden');
-            if (clearBtn) clearBtn.classList.add('hidden');
-            resultsBox.innerHTML = '';
-            return;
+        // 重新执行当前搜索
+        if (input.value.trim().length > 0) {
+          executeSearch(input.value.trim());
+        }
+      }
+
+      // 更新键盘选中的高亮样式
+      function updateSelection() {
+        const items = resultsList.querySelectorAll('[data-search-item]');
+        items.forEach((item, idx) => {
+          if (idx === selectedIndex) {
+            item.classList.add('bg-sky-50', 'dark:bg-sky-950/40', 'border-sky-300', 'dark:border-sky-700');
+            item.classList.remove('border-transparent');
+            item.scrollIntoView({ block: 'nearest' });
+          } else {
+            item.classList.remove('bg-sky-50', 'dark:bg-sky-950/40', 'border-sky-300', 'dark:border-sky-700');
+            item.classList.add('border-transparent');
           }
+        });
+      }
 
-          if (clearBtn) clearBtn.classList.remove('hidden');
+      // 核心搜索匹配算法
+      async function executeSearch(query) {
+        selectedIndex = -1;
 
-          const index = await getIndex();
-          const queryLower = query.toLowerCase();
-          // 严格仅以文章标题做匹配检索
-          const matches = index.filter((item) =>
-            item.title.toLowerCase().includes(queryLower)
-          );
+        if (!query) {
+          idleState.classList.remove('hidden');
+          resultsList.classList.add('hidden');
+          emptyState.classList.add('hidden');
+          resultsList.innerHTML = '';
+          if (clearBtn) clearBtn.classList.add('hidden');
+          if (countDisplay) countDisplay.textContent = '';
+          return;
+        }
 
-          dropdown.classList.remove('hidden');
+        if (clearBtn) clearBtn.classList.remove('hidden');
+        idleState.classList.add('hidden');
 
-          if (matches.length === 0) {
-            resultsBox.innerHTML = `
-              <div class="px-4 py-6 text-center text-xs text-neutral-400 dark:text-neutral-500">
-                未找到标题包含「<span class="text-neutral-600 dark:text-neutral-300 font-medium">${query}</span>」的文章
-              </div>
-            `;
-            return;
-          }
+        const index = await getIndex();
+        const queryLower = query.toLowerCase();
 
-          resultsBox.innerHTML = `
-            <div class="px-2.5 py-1 text-[10px] font-mono uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
-              匹配文章 (${matches.length})
-            </div>
-            ${matches.slice(0, 10).map((post) => `
-              <a
-                href="/posts/${post.slug}"
-                class="flex flex-col gap-1 px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800/80 transition-colors group block"
-              >
-                <span class="text-xs font-semibold text-neutral-800 dark:text-neutral-200 group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors leading-snug">
-                  ${highlightText(post.title, query)}
+        let matches = [];
+
+        if (currentMode === 'title') {
+          // 仅标题与标签匹配模式
+          matches = index
+            .map((item) => {
+              const titleMatch = item.title.toLowerCase().includes(queryLower);
+              const tagMatch = item.tags && item.tags.some((t) => t.toLowerCase().includes(queryLower));
+              if (titleMatch || tagMatch) {
+                return { item, matchType: titleMatch ? 'title' : 'tag', snippet: '' };
+              }
+              return null;
+            })
+            .filter(Boolean);
+        } else {
+          // 全文内容匹配模式 (包含标题、描述与正文全文)
+          matches = index
+            .map((item) => {
+              const titleMatch = item.title.toLowerCase().includes(queryLower);
+              const tagMatch = item.tags && item.tags.some((t) => t.toLowerCase().includes(queryLower));
+              const descMatch = item.description && item.description.toLowerCase().includes(queryLower);
+              const contentMatch = item.content && item.content.toLowerCase().includes(queryLower);
+
+              if (titleMatch || tagMatch || descMatch || contentMatch) {
+                let snippet = '';
+                if (contentMatch) {
+                  snippet = extractSnippet(item.content, query);
+                } else if (descMatch) {
+                  snippet = extractSnippet(item.description, query);
+                }
+                return {
+                  item,
+                  matchType: titleMatch ? 'title' : (contentMatch ? 'content' : (descMatch ? 'description' : 'tag')),
+                  snippet,
+                };
+              }
+              return null;
+            })
+            .filter(Boolean);
+        }
+
+        currentMatches = matches;
+
+        if (countDisplay) {
+          countDisplay.textContent = `${matches.length} 篇结果 (${currentMode === 'title' ? '仅标题' : '全文内容'})`;
+        }
+
+        if (matches.length === 0) {
+          resultsList.classList.add('hidden');
+          emptyState.classList.remove('hidden');
+          resultsList.innerHTML = '';
+          return;
+        }
+
+        emptyState.classList.add('hidden');
+        resultsList.classList.remove('hidden');
+
+        // 渲染匹配卡片
+        resultsList.innerHTML = matches.map(({ item, matchType, snippet }, idx) => `
+          <a
+            href="/posts/${item.slug}"
+            data-search-item
+            data-index="${idx}"
+            class="block p-3 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800/80 border border-transparent transition-all group"
+          >
+            <div class="flex items-center justify-between gap-2 mb-1">
+              <h4 class="text-sm font-semibold text-neutral-800 dark:text-neutral-100 group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors leading-snug">
+                ${highlightText(item.title, query)}
+              </h4>
+              <div class="flex items-center gap-1.5 shrink-0">
+                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400">
+                  ${matchType === 'title' ? '标题命中' : (matchType === 'content' ? '正文命中' : (matchType === 'description' ? '摘要命中' : '标签命中'))}
                 </span>
-                <div class="flex items-center gap-2 text-[10px] text-neutral-400 dark:text-neutral-500">
-                  <span class="font-mono">${post.date}</span>
-                  ${post.tags && post.tags.length ? `<span>•</span><span>#${post.tags[0]}</span>` : ''}
-                </div>
-              </a>
-            `).join('')}
-          `;
+                <span class="text-[10px] font-mono text-neutral-400 dark:text-neutral-500">
+                  ${item.date}
+                </span>
+              </div>
+            </div>
+
+            ${snippet ? `
+              <div class="text-xs text-neutral-600 dark:text-neutral-300 bg-neutral-100/70 dark:bg-neutral-800/60 p-2 rounded-lg mt-1.5 border border-neutral-200/50 dark:border-neutral-700/50 leading-relaxed font-normal">
+                <span class="text-neutral-400 text-[10px] select-none mr-1 font-mono">正文片段:</span>
+                ${snippet}
+              </div>
+            ` : (item.description ? `
+              <p class="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-1 mt-0.5">
+                ${item.description}
+              </p>
+            ` : '')}
+
+            ${item.tags && item.tags.length ? `
+              <div class="flex items-center gap-1.5 mt-2">
+                ${item.tags.map((t) => `
+                  <span class="text-[10px] px-2 py-0.5 rounded-md bg-neutral-200/50 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 font-mono">
+                    #${highlightText(t, query)}
+                  </span>
+                `).join('')}
+              </div>
+            ` : ''}
+          </a>
+        `).join('');
+
+        if (matches.length > 0) {
+          selectedIndex = 0;
+          updateSelection();
         }
+      }
 
-        input.addEventListener('input', (e) => {
-          performSearch(e.target.value.trim());
-        });
-
-        if (clearBtn) {
-          clearBtn.addEventListener('click', () => {
-            input.value = '';
-            performSearch('');
-            input.focus();
-          });
-        }
-
-        input.addEventListener('keydown', (e) => {
-          if (e.key === 'Escape') {
-            dropdown.classList.add('hidden');
-          } else if (e.key === 'Enter') {
-            const firstLink = resultsBox.querySelector('a');
-            if (firstLink) {
-              firstLink.click();
-            }
-          }
-        });
-
-        document.addEventListener('click', (e) => {
-          if (!root.contains(e.target)) {
-            dropdown.classList.add('hidden');
-          }
-        });
+      // 绑定唤醒按钮点击
+      document.querySelectorAll('[data-search-open-btn]').forEach((btn) => {
+        btn.onclick = (e) => {
+          e.preventDefault();
+          openModal();
+        };
       });
+
+      // 绑定模式切换点击
+      modePills.forEach((btn) => {
+        btn.onclick = () => {
+          switchMode(btn.getAttribute('data-search-mode'));
+        };
+      });
+
+      // 输入监听
+      input.oninput = (e) => {
+        executeSearch(e.target.value.trim());
+      };
+
+      // 清空按钮
+      if (clearBtn) {
+        clearBtn.onclick = () => {
+          input.value = '';
+          executeSearch('');
+          input.focus();
+        };
+      }
+
+      // 关闭按钮
+      if (closeBtn) {
+        closeBtn.onclick = closeModal;
+      }
+
+      // 点击外部遮罩关闭
+      modal.onclick = (e) => {
+        if (!modalContainer.contains(e.target)) {
+          closeModal();
+        }
+      };
+
+      // 键盘快捷键监听
+      input.onkeydown = (e) => {
+        if (e.key === 'Tab') {
+          e.preventDefault();
+          switchMode(currentMode === 'title' ? 'content' : 'title');
+          return;
+        }
+
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          if (currentMatches.length > 0) {
+            selectedIndex = (selectedIndex + 1) % currentMatches.length;
+            updateSelection();
+          }
+          return;
+        }
+
+        if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          if (currentMatches.length > 0) {
+            selectedIndex = (selectedIndex - 1 + currentMatches.length) % currentMatches.length;
+            updateSelection();
+          }
+          return;
+        }
+
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const items = resultsList.querySelectorAll('a[data-search-item]');
+          const target = items[selectedIndex] || items[0];
+          if (target) {
+            target.click();
+          }
+          return;
+        }
+
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          closeModal();
+          return;
+        }
+      };
+
+      // 全局快捷键唤起 (Ctrl+K, Cmd+K, /)
+      document.onkeydown = (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+          e.preventDefault();
+          if (modal.classList.contains('opacity-100')) {
+            closeModal();
+          } else {
+            openModal();
+          }
+          return;
+        }
+
+        if (e.key === 'Escape' && modal.classList.contains('opacity-100')) {
+          e.preventDefault();
+          closeModal();
+          return;
+        }
+
+        // 当不在输入框内时按下 '/' 快速唤起
+        if (e.key === '/' && !['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) {
+          e.preventDefault();
+          openModal();
+        }
+      };
     }
 
-    initSearchRoots();
-    document.addEventListener('astro:page-load', initSearchRoots);
+    initSearchSystem();
+    document.addEventListener('astro:page-load', initSearchSystem);
   })();
 </script>
