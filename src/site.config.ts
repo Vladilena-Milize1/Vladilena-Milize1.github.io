@@ -60,9 +60,9 @@ export const SITE: SiteConfig = {
     enable: true,
     type: "giscus",
     repo: "Vladilena-Milize1/Vladilena-Milize1.github.io",
-    repoId: "", // 请访问 https://giscus.app 输入仓库名称获取
+    repoId: "R_kgDOUhlS9g",
     category: "Announcements",
-    categoryId: "", // 请访问 https://giscus.app 获取对应讨论区 ID
+    categoryId: "DIC_kwDOUhlS9s4DGBlp",
     mapping: "pathname",
     strict: "0",
     reactionsEnabled: "1",
