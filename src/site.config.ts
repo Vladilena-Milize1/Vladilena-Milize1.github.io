@@ -36,7 +36,7 @@ export const SITE: SiteConfig = {
   socials: {
     github: "https://github.com/Vladilena-Milize1",
     twitter: "https://x.com/",
-    email: "3127137302@qq.com",
+    email: "mailto:3127137302@qq.com",
   },
   footer: {
     sinceYear: 2026,
