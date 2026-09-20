@@ -21,6 +21,16 @@
   }
 }
 
+/* 白天模式背景壁纸与视差吸附 */
+body {
+  background-color: #f8fafc;
+  background-image: linear-gradient(to bottom, rgba(248, 250, 252, 0.45), rgba(248, 250, 252, 0.65)), url('/bg-light.webp');
+  background-size: cover;
+  background-position: center top;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+
 /* 夜晚模式专属背景壁纸与视差吸附 */
 html.dark body {
   background-color: #0c0e14;
@@ -29,6 +39,15 @@ html.dark body {
   background-position: center top;
   background-attachment: fixed;
   background-repeat: no-repeat;
+}
+
+/* 纯享壁纸模式下显露高清壁纸原貌 */
+html.wallpaper-mode body {
+  background-image: url('/bg-light.webp') !important;
+}
+
+html.wallpaper-mode.dark body {
+  background-image: url('/bg-dark.webp') !important;
 }
 
 /* 沉浸式阅读模式 (Zen Mode) */
