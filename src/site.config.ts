@@ -21,12 +21,19 @@ export interface SiteConfig {
   };
   comment?: {
     enable: boolean;
-    serverURL: string;
+    type?: "giscus";
+    repo: string;
+    repoId: string;
+    category: string;
+    categoryId: string;
+    mapping?: "pathname" | "url" | "title" | "og:title" | "slug";
+    strict?: "0" | "1";
+    reactionsEnabled?: "0" | "1";
+    emitMetadata?: "0" | "1";
+    inputPosition?: "top" | "bottom";
     lang?: string;
-    login?: "enable" | "disable" | "force";
-    meta?: string[];
-    requiredMeta?: string[];
-    pageSize?: number;
+    lightTheme?: string;
+    darkTheme?: string;
   };
 }
 
@@ -51,11 +58,18 @@ export const SITE: SiteConfig = {
   },
   comment: {
     enable: true,
-    serverURL: "", // Waline 服务端 URL，如 https://waline.yourdomain.com 或 Vercel 部署地址
+    type: "giscus",
+    repo: "Vladilena-Milize1/Vladilena-Milize1.github.io",
+    repoId: "", // 请访问 https://giscus.app 输入仓库名称获取
+    category: "Announcements",
+    categoryId: "", // 请访问 https://giscus.app 获取对应讨论区 ID
+    mapping: "pathname",
+    strict: "0",
+    reactionsEnabled: "1",
+    emitMetadata: "0",
+    inputPosition: "bottom",
     lang: "zh-CN",
-    login: "enable", // 支持 GitHub 授权登录，同时支持免登录匿名评论
-    meta: ["nick", "mail", "link"],
-    requiredMeta: [], // 匿名评论无必填项约束
-    pageSize: 10,
+    lightTheme: "light",
+    darkTheme: "dark",
   },
 };
