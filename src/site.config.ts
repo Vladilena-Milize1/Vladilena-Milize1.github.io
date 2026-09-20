@@ -34,9 +34,9 @@ export const SITE: SiteConfig = {
     { title: "关于", href: "/about" },
   ],
   socials: {
-    github: "https://github.com",
-    twitter: "https://twitter.com",
-    email: "mailto:hello@example.com",
+    github: "https://github.com/Vladilena-Milize1",
+    twitter: "https://x.com/",
+    email: "3127137302@qq.com",
   },
   footer: {
     sinceYear: 2026,
