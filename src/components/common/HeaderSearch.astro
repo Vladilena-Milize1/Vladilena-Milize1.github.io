@@ -6,7 +6,7 @@ interface Props {
 const { class: className = "" } = Astro.props;
 ---
 
-<!-- 顶部常驻搜索唤起按钮（纯文字与快捷键提示，无贴图） -->
+<!-- 顶部常驻搜索唤起按钮 (纯文字与快捷键提示) -->
 <button
   type="button"
   data-search-open-btn
@@ -14,45 +14,56 @@ const { class: className = "" } = Astro.props;
     "w-full flex items-center justify-between gap-2 px-3 py-1.5 text-xs rounded-xl",
     "bg-neutral-100/70 hover:bg-neutral-200/70 dark:bg-white/10 dark:hover:bg-white/15",
     "border border-neutral-200/70 dark:border-white/10 text-neutral-500 dark:text-neutral-400",
-    "transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-sky-500/30",
+    "transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30",
     "cursor-pointer group select-none",
     className,
   ]}
   title="搜索文章 (Ctrl + K)"
   aria-label="打开搜索 (快捷键: Ctrl + K)"
 >
-  <span class="truncate text-neutral-500 dark:text-neutral-400 group-hover:text-neutral-800 dark:group-hover:text-neutral-200 transition-colors">
-    搜索文章...
-  </span>
-  <kbd class="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono text-neutral-400 dark:text-neutral-500 bg-neutral-200/60 dark:bg-neutral-800/80 rounded border border-neutral-300/60 dark:border-neutral-700/60 group-hover:border-sky-400/40 transition-colors" data-search-kbd>
+  <div class="flex items-center gap-2 truncate">
+    <svg class="w-3.5 h-3.5 shrink-0 text-neutral-400 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+    </svg>
+    <span class="truncate text-neutral-500 dark:text-neutral-400 group-hover:text-neutral-800 dark:group-hover:text-neutral-200 transition-colors">
+      键入开始搜索...
+    </span>
+  </div>
+  <kbd class="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono text-neutral-400 dark:text-neutral-500 bg-neutral-200/60 dark:bg-neutral-800/80 rounded border border-neutral-300/60 dark:border-neutral-700/60 group-hover:border-blue-400/40 transition-colors" data-search-kbd>
     Ctrl K
   </kbd>
 </button>
 
-<!-- 屏幕正中模态搜索弹窗 (初始为简约长条，有匹配时向下伸展，无任何贴图) -->
+<!-- 屏幕死正中模态搜索弹窗 (严格位于视口中央，匹配参考图样式) -->
 <div
   id="search-modal"
-  class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6 backdrop-blur-md bg-neutral-950/60 transition-opacity duration-200 opacity-0 pointer-events-none"
+  class="fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-sm bg-neutral-950/45 transition-opacity duration-200 opacity-0 pointer-events-none"
   role="dialog"
   aria-modal="true"
   aria-labelledby="search-modal-input"
 >
   <div
-    class="w-full max-w-xl bg-white/95 dark:bg-neutral-900/95 backdrop-blur-2xl border border-neutral-200/90 dark:border-neutral-700/80 shadow-2xl rounded-2xl overflow-hidden flex flex-col transition-transform duration-200 scale-95"
+    class="w-full max-w-xl bg-white dark:bg-neutral-900 rounded-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border border-neutral-200/90 dark:border-neutral-700/80 overflow-hidden flex flex-col transition-transform duration-200 scale-95"
     data-search-modal-container
   >
-    <!-- 主搜索长条 (纯文字输入 + 模式切换 + 关闭操作，无放大镜等贴图) -->
-    <div class="p-3 sm:p-3.5 flex items-center gap-2.5 sm:gap-3">
+    <!-- 主搜索条 (对标图一：居中简约胶囊条，含放大镜线标与输入框) -->
+    <div class="px-4 py-3 flex items-center gap-3">
+      <!-- 简约放大镜线标 -->
+      <svg class="w-5 h-5 text-neutral-400 dark:text-neutral-500 shrink-0 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      </svg>
+
+      <!-- 核心输入框 -->
       <input
         id="search-modal-input"
         type="search"
         autocomplete="off"
         spellcheck="false"
-        placeholder="输入关键词进行搜索..."
+        placeholder="键入开始搜索"
         class="flex-1 min-w-0 bg-transparent text-sm sm:text-base text-neutral-900 dark:text-neutral-50 placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none"
       />
 
-      <!-- 模式切换器 (纯文字 Tab 胶囊，无 emoji) -->
+      <!-- 匹配模式切换 (纯文字切换，无任何装饰贴图) -->
       <div class="flex items-center p-0.5 bg-neutral-100 dark:bg-neutral-800 rounded-lg text-xs shrink-0 select-none" role="tablist">
         <button
           type="button"
@@ -74,13 +85,12 @@ const { class: className = "" } = Astro.props;
         </button>
       </div>
 
-      <!-- 右侧操作区：清空与关闭纯文字提示 -->
+      <!-- 清空与关闭纯文字按钮 -->
       <div class="flex items-center gap-1.5 shrink-0">
         <button
           type="button"
           id="search-clear-btn"
           class="hidden text-xs text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 px-1.5 py-0.5 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-          title="清空输入"
         >
           清空
         </button>
@@ -88,25 +98,24 @@ const { class: className = "" } = Astro.props;
           type="button"
           id="search-close-btn"
           class="px-2 py-0.5 text-xs text-neutral-400 dark:text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-200 bg-neutral-100 dark:bg-neutral-800 rounded border border-neutral-200 dark:border-neutral-700 transition-colors font-mono"
-          title="关闭 (Esc)"
         >
           ESC
         </button>
       </div>
     </div>
 
-    <!-- 向下伸展的搜索结果区 (未输入关键词时隐藏，窗口保持极简长条) -->
+    <!-- 向下伸展的内容展示区 (对标图二：匹配时自动展开，有滚动条，底部纯文字快捷提示) -->
     <div
       id="search-results-wrapper"
-      class="hidden border-t border-neutral-200/80 dark:border-neutral-800 flex flex-col max-h-[65vh] sm:max-h-[58vh]"
+      class="hidden border-t border-neutral-100 dark:border-neutral-800 flex flex-col max-h-[62vh] sm:max-h-[55vh]"
     >
-      <!-- 结果列表挂载容器 -->
+      <!-- 结果列表 -->
       <div
         id="search-results-list"
-        class="flex-1 overflow-y-auto p-3 space-y-1.5"
+        class="flex-1 overflow-y-auto p-3 space-y-2 divide-y divide-neutral-100/70 dark:divide-neutral-800/60"
       ></div>
 
-      <!-- 无匹配结果纯文字提示 (无贴图) -->
+      <!-- 无匹配文字提示 (纯文字，无任何 emoji 或贴图) -->
       <div id="search-empty-state" class="py-8 px-4 text-center space-y-1 hidden">
         <p class="text-xs sm:text-sm text-neutral-600 dark:text-neutral-300 font-medium">
           未找到匹配内容
@@ -116,15 +125,24 @@ const { class: className = "" } = Astro.props;
         </p>
       </div>
 
-      <!-- 底部操作提示栏 (纯文字) -->
-      <div class="px-4 py-2 border-t border-neutral-200/60 dark:border-neutral-800/80 bg-neutral-50/70 dark:bg-neutral-900/50 text-[11px] text-neutral-400 dark:text-neutral-500 flex items-center justify-between select-none">
-        <div class="flex items-center gap-3">
-          <span>↑↓ 导航</span>
-          <span>↵ 打开</span>
-          <span>Tab 切换模式</span>
-          <span>Esc 关闭</span>
-        </div>
-        <div id="search-results-count" class="font-mono"></div>
+      <!-- 底部纯文字提示栏 (对标图二底部: ↑↓ 切换  ↵ 选择  Esc 关闭) -->
+      <div class="px-4 py-2.5 border-t border-neutral-100 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-900/40 text-xs text-neutral-400 dark:text-neutral-500 flex items-center justify-center gap-6 select-none">
+        <span class="inline-flex items-center gap-1">
+          <span class="font-mono text-neutral-500 dark:text-neutral-400">↑↓</span>
+          <span>切换</span>
+        </span>
+        <span class="inline-flex items-center gap-1">
+          <span class="font-mono text-neutral-500 dark:text-neutral-400">↵</span>
+          <span>选择</span>
+        </span>
+        <span class="inline-flex items-center gap-1">
+          <span class="font-mono text-neutral-500 dark:text-neutral-400">Tab</span>
+          <span>模式</span>
+        </span>
+        <span class="inline-flex items-center gap-1">
+          <span class="font-mono text-neutral-500 dark:text-neutral-400">Esc</span>
+          <span>关闭</span>
+        </span>
       </div>
     </div>
   </div>
@@ -162,7 +180,7 @@ const { class: className = "" } = Astro.props;
       const regex = new RegExp(`(${escaped})`, 'gi');
       return text.replace(
         regex,
-        '<mark class="bg-sky-500/20 text-sky-700 dark:text-sky-300 dark:bg-sky-400/25 px-0.5 rounded font-semibold">$1</mark>'
+        '<mark class="bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 px-0.5 rounded font-semibold">$1</mark>'
       );
     }
 
@@ -174,7 +192,7 @@ const { class: className = "" } = Astro.props;
       if (index === -1) return '';
 
       const beforeLen = 35;
-      const afterLen = 65;
+      const afterLen = 75;
       const start = Math.max(0, index - beforeLen);
       const end = Math.min(content.length, index + query.length + afterLen);
 
@@ -188,29 +206,37 @@ const { class: className = "" } = Astro.props;
     function initSearchSystem() {
       updateKbdBadges();
 
-      const modals = document.querySelectorAll('#search-modal');
-      if (modals.length > 1) {
-        for (let i = 1; i < modals.length; i++) {
-          modals[i].remove();
+      // 获取 modal 并强制挂载至 document.body，确保 position: fixed 绝不受 header 的 backdrop-blur 限制！
+      const modal = document.getElementById('search-modal');
+      if (modal && modal.parentElement !== document.body) {
+        document.body.appendChild(modal);
+      }
+
+      // 清理重复挂载的模态弹窗
+      const allModals = document.querySelectorAll('#search-modal');
+      if (allModals.length > 1) {
+        for (let i = 1; i < allModals.length; i++) {
+          allModals[i].remove();
         }
       }
 
-      const modal = document.getElementById('search-modal');
-      const modalContainer = modal ? modal.querySelector('[data-search-modal-container]') : null;
+      const activeModal = document.getElementById('search-modal');
+      if (!activeModal) return;
+
+      const modalContainer = activeModal.querySelector('[data-search-modal-container]');
       const input = document.getElementById('search-modal-input');
       const clearBtn = document.getElementById('search-clear-btn');
       const closeBtn = document.getElementById('search-close-btn');
       const resultsWrapper = document.getElementById('search-results-wrapper');
       const resultsList = document.getElementById('search-results-list');
       const emptyState = document.getElementById('search-empty-state');
-      const countDisplay = document.getElementById('search-results-count');
-      const modePills = document.querySelectorAll('.search-mode-pill');
+      const modePills = activeModal.querySelectorAll('.search-mode-pill');
 
-      if (!modal || !input || !modalContainer || !resultsWrapper) return;
+      if (!input || !modalContainer || !resultsWrapper) return;
 
       function openModal() {
-        modal.classList.remove('opacity-0', 'pointer-events-none');
-        modal.classList.add('opacity-100', 'pointer-events-auto');
+        activeModal.classList.remove('opacity-0', 'pointer-events-none');
+        activeModal.classList.add('opacity-100', 'pointer-events-auto');
         modalContainer.classList.remove('scale-95');
         modalContainer.classList.add('scale-100');
         document.body.style.overflow = 'hidden';
@@ -225,8 +251,8 @@ const { class: className = "" } = Astro.props;
       }
 
       function closeModal() {
-        modal.classList.remove('opacity-100', 'pointer-events-auto');
-        modal.classList.add('opacity-0', 'pointer-events-none');
+        activeModal.classList.remove('opacity-100', 'pointer-events-auto');
+        activeModal.classList.add('opacity-0', 'pointer-events-none');
         modalContainer.classList.remove('scale-100');
         modalContainer.classList.add('scale-95');
         document.body.style.overflow = '';
@@ -256,12 +282,10 @@ const { class: className = "" } = Astro.props;
         const items = resultsList.querySelectorAll('[data-search-item]');
         items.forEach((item, idx) => {
           if (idx === selectedIndex) {
-            item.classList.add('bg-sky-50', 'dark:bg-sky-950/40', 'border-sky-300', 'dark:border-sky-700');
-            item.classList.remove('border-transparent');
+            item.classList.add('bg-neutral-100/80', 'dark:bg-neutral-800/80', 'ring-1', 'ring-blue-500/40');
             item.scrollIntoView({ block: 'nearest' });
           } else {
-            item.classList.remove('bg-sky-50', 'dark:bg-sky-950/40', 'border-sky-300', 'dark:border-sky-700');
-            item.classList.add('border-transparent');
+            item.classList.remove('bg-neutral-100/80', 'dark:bg-neutral-800/80', 'ring-1', 'ring-blue-500/40');
           }
         });
       }
@@ -274,7 +298,6 @@ const { class: className = "" } = Astro.props;
           resultsList.innerHTML = '';
           emptyState.classList.add('hidden');
           if (clearBtn) clearBtn.classList.add('hidden');
-          if (countDisplay) countDisplay.textContent = '';
           return;
         }
 
@@ -325,10 +348,6 @@ const { class: className = "" } = Astro.props;
 
         currentMatches = matches;
 
-        if (countDisplay) {
-          countDisplay.textContent = `${matches.length} 篇结果 (${currentMode === 'title' ? '仅标题' : '全文内容'})`;
-        }
-
         if (matches.length === 0) {
           resultsList.classList.add('hidden');
           emptyState.classList.remove('hidden');
@@ -339,42 +358,36 @@ const { class: className = "" } = Astro.props;
         emptyState.classList.add('hidden');
         resultsList.classList.remove('hidden');
 
-        resultsList.innerHTML = matches.map(({ item, matchType, snippet }, idx) => `
+        resultsList.innerHTML = matches.map(({ item, snippet }, idx) => `
           <a
             href="/posts/${item.slug}"
             data-search-item
             data-index="${idx}"
-            class="block p-3 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800/80 border border-transparent transition-all group"
+            class="block p-2.5 rounded-xl hover:bg-neutral-100/70 dark:hover:bg-neutral-800/70 transition-all group select-none"
           >
             <div class="flex items-center justify-between gap-2 mb-1">
-              <h4 class="text-sm font-semibold text-neutral-800 dark:text-neutral-100 group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors leading-snug">
+              <h4 class="text-sm font-semibold text-neutral-800 dark:text-neutral-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-snug">
                 ${highlightText(item.title, query)}
               </h4>
-              <div class="flex items-center gap-1.5 shrink-0">
-                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400">
-                  ${matchType === 'title' ? '标题命中' : (matchType === 'content' ? '正文命中' : (matchType === 'description' ? '摘要命中' : '标签命中'))}
-                </span>
-                <span class="text-[10px] font-mono text-neutral-400 dark:text-neutral-500">
-                  ${item.date}
-                </span>
-              </div>
+              <span class="text-[11px] font-mono text-neutral-400 dark:text-neutral-500 shrink-0">
+                ${item.date}
+              </span>
             </div>
 
             ${snippet ? `
-              <div class="text-xs text-neutral-600 dark:text-neutral-300 bg-neutral-100/70 dark:bg-neutral-800/60 p-2 rounded-lg mt-1.5 border border-neutral-200/50 dark:border-neutral-700/50 leading-relaxed font-normal">
-                <span class="text-neutral-400 text-[10px] select-none mr-1 font-mono">正文片段:</span>
+              <p class="text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed line-clamp-2 mt-1">
                 ${snippet}
-              </div>
+              </p>
             ` : (item.description ? `
               <p class="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-1 mt-0.5">
-                ${item.description}
+                ${highlightText(item.description, query)}
               </p>
             ` : '')}
 
             ${item.tags && item.tags.length ? `
-              <div class="flex items-center gap-1.5 mt-2">
+              <div class="flex items-center gap-1.5 mt-1.5">
                 ${item.tags.map((t) => `
-                  <span class="text-[10px] px-2 py-0.5 rounded-md bg-neutral-200/50 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 font-mono">
+                  <span class="text-[10px] px-1.5 py-0.2 rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 font-mono">
                     #${highlightText(t, query)}
                   </span>
                 `).join('')}
@@ -418,7 +431,7 @@ const { class: className = "" } = Astro.props;
         closeBtn.onclick = closeModal;
       }
 
-      modal.onclick = (e) => {
+      activeModal.onclick = (e) => {
         if (!modalContainer.contains(e.target)) {
           closeModal();
         }
@@ -469,7 +482,7 @@ const { class: className = "" } = Astro.props;
       document.onkeydown = (e) => {
         if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
           e.preventDefault();
-          if (modal.classList.contains('opacity-100')) {
+          if (activeModal.classList.contains('opacity-100')) {
             closeModal();
           } else {
             openModal();
@@ -477,7 +490,7 @@ const { class: className = "" } = Astro.props;
           return;
         }
 
-        if (e.key === 'Escape' && modal.classList.contains('opacity-100')) {
+        if (e.key === 'Escape' && activeModal.classList.contains('opacity-100')) {
           e.preventDefault();
           closeModal();
           return;
