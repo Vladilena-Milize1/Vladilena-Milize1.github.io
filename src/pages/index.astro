@@ -13,10 +13,10 @@ const sortedPosts = posts.sort((a, b) => b.data.date.valueOf() - a.data.date.val
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
         <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-neutral-50 mb-2">
-          [去去重去去,来时是来时]
+          去去重去去,来时是来时
         </h1>
         <p class="text-sm sm:text-base text-neutral-600 dark:text-neutral-300 max-w-xl leading-relaxed">
-          [欢迎寄语与个人副标题描述占位文本...]
+          
         </p>
       </div>
       <div class="flex items-center gap-2 shrink-0">
@@ -64,11 +64,16 @@ const sortedPosts = posts.sort((a, b) => b.data.date.valueOf() - a.data.date.val
                   {post.data.title}
                 </a>
               </h3>
-              <div class="flex items-center gap-2.5 text-xs font-mono text-neutral-400 dark:text-neutral-500 shrink-0">
-                <span title="文章字数">{wordCount.toLocaleString('zh-CN')} 字</span>
-                <span class="opacity-40">•</span>
+              <div class="flex flex-wrap items-center gap-1.5 shrink-0 text-xs sm:text-sm font-semibold font-mono">
+                <span
+                  class="px-2.5 py-0.5 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-100/90 dark:bg-neutral-800/80 text-neutral-800 dark:text-neutral-100 shadow-sm"
+                  title="文章字数"
+                >
+                  {wordCount.toLocaleString('zh-CN')} 字
+                </span>
                 <time
                   datetime={post.data.date.toISOString()}
+                  class="px-2.5 py-0.5 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-100/90 dark:bg-neutral-800/80 text-neutral-800 dark:text-neutral-100 shadow-sm"
                 >
                   {formattedDate}
                 </time>

@@ -69,7 +69,7 @@ export const SITE: SiteConfig = {
     emitMetadata: "0",
     inputPosition: "bottom",
     lang: "zh-CN",
-    lightTheme: "light",
-    darkTheme: "dark",
+    lightTheme: "https://vladilena-milize1.github.io/giscus/light.css",
+    darkTheme: "https://vladilena-milize1.github.io/giscus/dark.css",
   },
 };

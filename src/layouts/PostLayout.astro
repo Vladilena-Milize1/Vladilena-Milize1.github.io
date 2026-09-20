@@ -39,29 +39,34 @@ const formattedDate = new Intl.DateTimeFormat('zh-CN', {
         {title}
       </h1>
 
-      <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-neutral-500 dark:text-neutral-400">
-        <time datetime={date.toISOString()}>
-          {formattedDate}
-        </time>
+      <div class="flex flex-wrap items-center gap-2.5 mb-2">
+        <!-- 发布日期方框 -->
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-neutral-100/90 dark:bg-neutral-800/80 shadow-sm text-neutral-800 dark:text-neutral-100 text-sm sm:text-[15px] font-semibold" title="发布日期">
+          <svg class="w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <time datetime={date.toISOString()}>{formattedDate}</time>
+        </div>
+
+        <!-- 字数预估方框 -->
+        {wordCount !== undefined && (
+          <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-neutral-100/90 dark:bg-neutral-800/80 shadow-sm text-neutral-800 dark:text-neutral-100 text-sm sm:text-[15px] font-semibold" title="文章字数（数字/字母两个算一个字）">
+            <svg class="w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            <span>{wordCount.toLocaleString('zh-CN')} 字</span>
+          </div>
+        )}
 
         {updatedDate && (
-          <span class="text-xs">
+          <span class="text-xs text-neutral-500 dark:text-neutral-400 font-mono">
             (更新于 {new Intl.DateTimeFormat('zh-CN', { year: 'numeric', month: 'numeric', day: 'numeric' }).format(updatedDate)})
           </span>
         )}
 
-        {wordCount !== undefined && (
-          <span class="flex items-center gap-1.5 font-mono text-xs text-neutral-500 dark:text-neutral-400" title="文章总字数（数字/字母两个算一个字）">
-            <svg class="w-3.5 h-3.5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
-            <span>{wordCount.toLocaleString('zh-CN')} 字</span>
-          </span>
-        )}
-
-        <div class="flex flex-wrap items-center gap-2">
+        <div class="flex flex-wrap items-center gap-1.5 ml-auto">
           {tags.map((tag) => (
-            <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-neutral-200/60 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-neutral-200/70 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border border-neutral-300/40 dark:border-neutral-700/50">
               #{tag}
             </span>
           ))}
