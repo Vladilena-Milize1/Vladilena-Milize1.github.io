@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
+import { countWords } from '../../utils/wordCount';
 
 const posts = await getCollection('blog', ({ data }) => !data.draft);
 const sortedPosts = posts.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
@@ -36,6 +37,8 @@ const totalPages = Math.max(1, Math.ceil(totalPosts / PAGE_SIZE));
         day: 'numeric',
       }).format(post.data.date);
 
+      const wordCount = countWords(post.body);
+
       // 默认前 10 篇渲染可见，其余先隐藏（客户端 JS 会根据页码精确受控）
       const isInitiallyVisible = index < PAGE_SIZE;
 
@@ -54,12 +57,15 @@ const totalPages = Math.max(1, Math.ceil(totalPosts / PAGE_SIZE));
                 {post.data.title}
               </a>
             </h2>
-            <time
-              datetime={post.data.date.toISOString()}
-              class="text-xs font-mono text-neutral-400 dark:text-neutral-500 shrink-0"
-            >
-              {formattedDate}
-            </time>
+            <div class="flex items-center gap-2.5 text-xs font-mono text-neutral-400 dark:text-neutral-500 shrink-0">
+              <span title="文章字数">{wordCount.toLocaleString('zh-CN')} 字</span>
+              <span class="opacity-40">•</span>
+              <time
+                datetime={post.data.date.toISOString()}
+              >
+                {formattedDate}
+              </time>
+            </div>
           </div>
           <p class="text-sm text-neutral-600 dark:text-neutral-400 line-clamp-2 leading-relaxed mb-3">
             {post.data.description}

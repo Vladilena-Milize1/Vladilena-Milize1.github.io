@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
+import { countWords } from '../utils/wordCount';
 
 const posts = await getCollection('blog', ({ data }) => !data.draft);
 const sortedPosts = posts.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf()).slice(0, 6);
@@ -52,6 +53,8 @@ const sortedPosts = posts.sort((a, b) => b.data.date.valueOf() - a.data.date.val
           day: 'numeric',
         }).format(post.data.date);
 
+        const wordCount = countWords(post.body);
+
         return (
           <article class="group relative p-5 rounded-2xl bg-white/60 dark:bg-neutral-900/60 backdrop-blur-sm border border-neutral-200/70 dark:border-neutral-800/70 hover:border-sky-500/50 dark:hover:border-sky-500/50 hover:shadow-md transition-all">
             <div class="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 mb-2">
@@ -61,12 +64,15 @@ const sortedPosts = posts.sort((a, b) => b.data.date.valueOf() - a.data.date.val
                   {post.data.title}
                 </a>
               </h3>
-              <time
-                datetime={post.data.date.toISOString()}
-                class="text-xs font-mono text-neutral-400 dark:text-neutral-500 shrink-0"
-              >
-                {formattedDate}
-              </time>
+              <div class="flex items-center gap-2.5 text-xs font-mono text-neutral-400 dark:text-neutral-500 shrink-0">
+                <span title="文章字数">{wordCount.toLocaleString('zh-CN')} 字</span>
+                <span class="opacity-40">•</span>
+                <time
+                  datetime={post.data.date.toISOString()}
+                >
+                  {formattedDate}
+                </time>
+              </div>
             </div>
             <p class="text-sm text-neutral-600 dark:text-neutral-400 line-clamp-2 leading-relaxed mb-3">
               {post.data.description}
