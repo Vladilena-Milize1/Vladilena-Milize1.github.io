@@ -13,16 +13,22 @@ const emailHref = rawEmail ? (rawEmail.startsWith('mailto:') ? rawEmail : `mailt
 <div class="space-y-6">
   <!-- 个人主信息卡片 -->
   <div class="p-6 rounded-2xl bg-white/60 dark:bg-neutral-900/60 backdrop-blur-sm border border-neutral-200/70 dark:border-neutral-800/70 shadow-sm transition-all hover:shadow-md">
-    <!-- 圆形头像展示 -->
-    <div class="relative w-28 h-28 mx-auto mb-4 group">
+    <!-- 圆形头像展示（含连续点击彩蛋） -->
+    <div class="relative w-28 h-28 mx-auto mb-4 group cursor-pointer select-none egg-avatar-trigger">
       <img
         src="/avatar.jpg"
         alt={SITE.author}
-        class="w-full h-full rounded-full object-cover shadow-md border border-neutral-300/80 dark:border-neutral-700/80 group-hover:scale-105 transition-transform duration-300"
+        class="w-full h-full rounded-full object-cover shadow-md border border-neutral-300/80 dark:border-neutral-700/80 group-hover:scale-105 active:scale-95 transition-transform duration-300"
+      />
+      <!-- 彩蛋动图：原位覆盖播放 -->
+      <img
+        src="/egg.gif"
+        alt="Egg"
+        class="egg-avatar-gif absolute inset-0 w-full h-full rounded-full object-cover shadow-md border border-neutral-300/80 dark:border-neutral-700/80 hidden z-10"
       />
       <!-- 右下角表情微徽标 (照着用户截图 🥺 样式) -->
       <span
-        class="absolute bottom-0.5 right-0.5 w-6 h-6 rounded-full bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 shadow-md flex items-center justify-center text-xs select-none"
+        class="absolute bottom-0.5 right-0.5 w-6 h-6 rounded-full bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 shadow-md flex items-center justify-center text-xs select-none z-20"
         title="Mood"
       >
         🥺

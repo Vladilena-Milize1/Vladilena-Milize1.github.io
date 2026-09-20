@@ -233,11 +233,62 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site || 'https://example.
         });
       }
 
+      function setupAvatarEasterEgg() {
+        const triggers = document.querySelectorAll('.egg-avatar-trigger');
+
+        triggers.forEach((trigger) => {
+          if (trigger.dataset.eggBound === 'true') return;
+          trigger.dataset.eggBound = 'true';
+
+          let clickTimestamps = [];
+          let isEggPlaying = false;
+          const eggImg = trigger.querySelector('.egg-avatar-gif');
+          if (!eggImg) return;
+
+          trigger.addEventListener('click', (e) => {
+            if (isEggPlaying) {
+              e.preventDefault();
+              return;
+            }
+
+            const now = Date.now();
+            clickTimestamps.push(now);
+
+            // 仅保留 6 秒内 (6000ms) 的点击记录
+            clickTimestamps = clickTimestamps.filter((t) => now - t <= 6000);
+
+            // 如果是在 <a> 链接内且进入连续点击，阻止父级链接跳转
+            if (clickTimestamps.length > 1 && trigger.closest('a')) {
+              e.preventDefault();
+            }
+
+            // 6秒内连续点击达到 7 次
+            if (clickTimestamps.length >= 7) {
+              e.preventDefault();
+              clickTimestamps = [];
+              isEggPlaying = true;
+
+              // 赋予当前时间戳以确保从第 1 帧开始播放
+              eggImg.src = '/egg.gif?t=' + now;
+              eggImg.classList.remove('hidden');
+
+              // 播放持续 2s 后结束，无提示静默恢复
+              setTimeout(() => {
+                eggImg.classList.add('hidden');
+                isEggPlaying = false;
+              }, 2000);
+            }
+          });
+        });
+      }
+
       setupZenMode();
       setupWallpaperMode();
+      setupAvatarEasterEgg();
       document.addEventListener('astro:page-load', () => {
         setupZenMode();
         setupWallpaperMode();
+        setupAvatarEasterEgg();
       });
     </script>
   </body>

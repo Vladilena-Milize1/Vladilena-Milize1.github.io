@@ -10,11 +10,18 @@ const pathname = Astro.url.pathname;
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3 sm:gap-4">
     <!-- 站点 Logo / 头像与用户名 -->
     <a href="/" class="flex items-center gap-2.5 text-lg font-bold tracking-tight text-neutral-900 dark:text-neutral-50 hover:text-sky-600 dark:hover:text-sky-400 transition-colors group shrink-0">
-      <img
-        src="/avatar.jpg"
-        alt={SITE.author}
-        class="w-8 h-8 rounded-full object-cover shadow-sm border border-neutral-200/80 dark:border-neutral-700/80 group-hover:scale-105 transition-transform"
-      />
+      <div class="relative w-8 h-8 shrink-0 rounded-full egg-avatar-trigger select-none">
+        <img
+          src="/avatar.jpg"
+          alt={SITE.author}
+          class="w-8 h-8 rounded-full object-cover shadow-sm border border-neutral-200/80 dark:border-neutral-700/80 group-hover:scale-105 active:scale-95 transition-transform"
+        />
+        <img
+          src="/egg.gif"
+          alt="Egg"
+          class="egg-avatar-gif absolute inset-0 w-8 h-8 rounded-full object-cover shadow-sm border border-neutral-200/80 dark:border-neutral-700/80 hidden z-10"
+        />
+      </div>
       <span class="tracking-tight">{SITE.author}</span>
     </a>
 
