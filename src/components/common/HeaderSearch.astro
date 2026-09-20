@@ -6,12 +6,12 @@ interface Props {
 const { class: className = "" } = Astro.props;
 ---
 
-<!-- 顶部常驻搜索唤起按钮 -->
+<!-- 顶部常驻搜索唤起按钮（纯文字与快捷键提示，无贴图） -->
 <button
   type="button"
   data-search-open-btn
   class:list={[
-    "w-full flex items-center justify-between gap-2.5 px-3 py-1.5 text-xs rounded-xl",
+    "w-full flex items-center justify-between gap-2 px-3 py-1.5 text-xs rounded-xl",
     "bg-neutral-100/70 hover:bg-neutral-200/70 dark:bg-white/10 dark:hover:bg-white/15",
     "border border-neutral-200/70 dark:border-white/10 text-neutral-500 dark:text-neutral-400",
     "transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-sky-500/30",
@@ -21,153 +21,111 @@ const { class: className = "" } = Astro.props;
   title="搜索文章 (Ctrl + K)"
   aria-label="打开搜索 (快捷键: Ctrl + K)"
 >
-  <div class="flex items-center gap-2 truncate">
-    <svg class="w-3.5 h-3.5 shrink-0 text-neutral-400 group-hover:text-sky-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-    </svg>
-    <span class="truncate text-neutral-500 dark:text-neutral-400 group-hover:text-neutral-700 dark:group-hover:text-neutral-200 transition-colors">
-      搜索文章...
-    </span>
-  </div>
-  <kbd class="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-mono text-neutral-400 dark:text-neutral-400 bg-neutral-200/60 dark:bg-neutral-800/80 rounded border border-neutral-300/60 dark:border-neutral-700/60 group-hover:border-sky-400/40 transition-colors" data-search-kbd>
+  <span class="truncate text-neutral-500 dark:text-neutral-400 group-hover:text-neutral-800 dark:group-hover:text-neutral-200 transition-colors">
+    搜索文章...
+  </span>
+  <kbd class="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono text-neutral-400 dark:text-neutral-500 bg-neutral-200/60 dark:bg-neutral-800/80 rounded border border-neutral-300/60 dark:border-neutral-700/60 group-hover:border-sky-400/40 transition-colors" data-search-kbd>
     Ctrl K
   </kbd>
 </button>
 
-<!-- 屏幕中央模态搜索弹窗 (Spotlight / Command Palette) -->
+<!-- 屏幕正中模态搜索弹窗 (初始为简约长条，有匹配时向下伸展，无任何贴图) -->
 <div
   id="search-modal"
-  class="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-3 sm:p-4 md:p-6 backdrop-blur-md bg-neutral-950/60 transition-opacity duration-200 opacity-0 pointer-events-none"
+  class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6 backdrop-blur-md bg-neutral-950/60 transition-opacity duration-200 opacity-0 pointer-events-none"
   role="dialog"
   aria-modal="true"
-  aria-labelledby="search-modal-title"
+  aria-labelledby="search-modal-input"
 >
   <div
-    class="w-full max-w-2xl bg-white/95 dark:bg-neutral-900/95 backdrop-blur-2xl border border-neutral-200/90 dark:border-neutral-700/80 shadow-2xl rounded-2xl overflow-hidden flex flex-col max-h-[88vh] sm:max-h-[82vh] transition-transform duration-200 scale-95"
+    class="w-full max-w-xl bg-white/95 dark:bg-neutral-900/95 backdrop-blur-2xl border border-neutral-200/90 dark:border-neutral-700/80 shadow-2xl rounded-2xl overflow-hidden flex flex-col transition-transform duration-200 scale-95"
     data-search-modal-container
   >
-    <!-- 弹窗顶部输入与模式切换区 -->
-    <div class="p-3.5 sm:p-4 border-b border-neutral-200/80 dark:border-neutral-800 space-y-3">
-      <!-- 搜索输入栏 -->
-      <div class="relative flex items-center">
-        <svg class="absolute left-3 w-5 h-5 text-sky-500 shrink-0 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
+    <!-- 主搜索长条 (纯文字输入 + 模式切换 + 关闭操作，无放大镜等贴图) -->
+    <div class="p-3 sm:p-3.5 flex items-center gap-2.5 sm:gap-3">
+      <input
+        id="search-modal-input"
+        type="search"
+        autocomplete="off"
+        spellcheck="false"
+        placeholder="输入关键词进行搜索..."
+        class="flex-1 min-w-0 bg-transparent text-sm sm:text-base text-neutral-900 dark:text-neutral-50 placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none"
+      />
 
-        <input
-          id="search-modal-input"
-          type="search"
-          autocomplete="off"
-          spellcheck="false"
-          placeholder="输入关键词进行搜索..."
-          class="w-full pl-10 pr-16 py-2.5 text-sm sm:text-base bg-transparent text-neutral-900 dark:text-neutral-50 placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none"
-        />
-
-        <div class="absolute right-2 flex items-center gap-1.5">
-          <button
-            type="button"
-            id="search-clear-btn"
-            class="hidden p-1 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 transition-colors"
-            title="清空输入"
-            aria-label="清空输入"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            id="search-close-btn"
-            class="px-2 py-0.5 text-xs text-neutral-400 dark:text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-200 bg-neutral-100 dark:bg-neutral-800 rounded border border-neutral-200 dark:border-neutral-700 transition-colors"
-            title="关闭 (Esc)"
-          >
-            ESC
-          </button>
-        </div>
+      <!-- 模式切换器 (纯文字 Tab 胶囊，无 emoji) -->
+      <div class="flex items-center p-0.5 bg-neutral-100 dark:bg-neutral-800 rounded-lg text-xs shrink-0 select-none" role="tablist">
+        <button
+          type="button"
+          role="tab"
+          data-search-mode="title"
+          aria-selected="true"
+          class="search-mode-pill px-2.5 py-1 rounded-md font-medium transition-all bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white shadow-sm"
+        >
+          仅标题
+        </button>
+        <button
+          type="button"
+          role="tab"
+          data-search-mode="content"
+          aria-selected="false"
+          class="search-mode-pill px-2.5 py-1 rounded-md font-medium transition-all text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200"
+        >
+          全文内容
+        </button>
       </div>
 
-      <!-- 匹配模式切换器 (Tab 胶囊栏) -->
-      <div class="flex items-center justify-between pt-1 text-xs">
-        <div class="flex items-center gap-1.5 p-1 bg-neutral-100/90 dark:bg-neutral-800/80 rounded-xl border border-neutral-200/70 dark:border-neutral-700/60" role="tablist">
-          <button
-            type="button"
-            role="tab"
-            data-search-mode="title"
-            aria-selected="true"
-            class="search-mode-pill px-3 py-1 rounded-lg font-medium transition-all duration-150 flex items-center gap-1 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white shadow-sm"
-          >
-            <span>📌</span>
-            <span>仅标题匹配</span>
-          </button>
-          <button
-            type="button"
-            role="tab"
-            data-search-mode="content"
-            aria-selected="false"
-            class="search-mode-pill px-3 py-1 rounded-lg font-medium transition-all duration-150 flex items-center gap-1 text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200"
-          >
-            <span>📄</span>
-            <span>全文内容匹配</span>
-          </button>
-        </div>
-
-        <div class="hidden sm:flex items-center gap-1 text-[11px] text-neutral-400 dark:text-neutral-500">
-          <span>提示：按</span>
-          <kbd class="px-1 py-0.5 rounded bg-neutral-200/60 dark:bg-neutral-800 font-mono text-[10px]">Tab</kbd>
-          <span>快速切换模式</span>
-        </div>
+      <!-- 右侧操作区：清空与关闭纯文字提示 -->
+      <div class="flex items-center gap-1.5 shrink-0">
+        <button
+          type="button"
+          id="search-clear-btn"
+          class="hidden text-xs text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 px-1.5 py-0.5 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+          title="清空输入"
+        >
+          清空
+        </button>
+        <button
+          type="button"
+          id="search-close-btn"
+          class="px-2 py-0.5 text-xs text-neutral-400 dark:text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-200 bg-neutral-100 dark:bg-neutral-800 rounded border border-neutral-200 dark:border-neutral-700 transition-colors font-mono"
+          title="关闭 (Esc)"
+        >
+          ESC
+        </button>
       </div>
     </div>
 
-    <!-- 搜索结果列表区 -->
+    <!-- 向下伸展的搜索结果区 (未输入关键词时隐藏，窗口保持极简长条) -->
     <div
-      id="search-results-container"
-      class="flex-1 overflow-y-auto p-3 space-y-1.5 min-h-[160px] max-h-[50vh] divide-y-0"
+      id="search-results-wrapper"
+      class="hidden border-t border-neutral-200/80 dark:border-neutral-800 flex flex-col max-h-[65vh] sm:max-h-[58vh]"
     >
-      <!-- 初始欢迎 / 空状态 -->
-      <div id="search-idle-state" class="py-10 text-center space-y-2">
-        <div class="text-3xl select-none">🔍</div>
-        <p class="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400">
-          键入关键词，即刻检索博客文章
+      <!-- 结果列表挂载容器 -->
+      <div
+        id="search-results-list"
+        class="flex-1 overflow-y-auto p-3 space-y-1.5"
+      ></div>
+
+      <!-- 无匹配结果纯文字提示 (无贴图) -->
+      <div id="search-empty-state" class="py-8 px-4 text-center space-y-1 hidden">
+        <p class="text-xs sm:text-sm text-neutral-600 dark:text-neutral-300 font-medium">
+          未找到匹配内容
         </p>
         <p class="text-[11px] text-neutral-400 dark:text-neutral-500">
-          支持快速过滤文章标题，或切换到「全文内容」模式深度检索正文
+          可按 Tab 切换为全文内容模式重试
         </p>
       </div>
 
-      <!-- 动态结果挂载容器 -->
-      <div id="search-results-list" class="space-y-1.5 hidden"></div>
-
-      <!-- 无匹配结果状态 -->
-      <div id="search-empty-state" class="py-10 text-center space-y-2 hidden">
-        <div class="text-2xl select-none">📭</div>
-        <p class="text-xs sm:text-sm text-neutral-600 dark:text-neutral-300 font-medium">
-          未找到匹配的内容
-        </p>
-        <p id="search-empty-tip" class="text-[11px] text-neutral-400 dark:text-neutral-500">
-          若在「仅标题」下未搜到，可尝试切换到「全文内容」模式检索正文
-        </p>
+      <!-- 底部操作提示栏 (纯文字) -->
+      <div class="px-4 py-2 border-t border-neutral-200/60 dark:border-neutral-800/80 bg-neutral-50/70 dark:bg-neutral-900/50 text-[11px] text-neutral-400 dark:text-neutral-500 flex items-center justify-between select-none">
+        <div class="flex items-center gap-3">
+          <span>↑↓ 导航</span>
+          <span>↵ 打开</span>
+          <span>Tab 切换模式</span>
+          <span>Esc 关闭</span>
+        </div>
+        <div id="search-results-count" class="font-mono"></div>
       </div>
-    </div>
-
-    <!-- 弹窗底部操作指引栏 -->
-    <div class="px-4 py-2.5 border-t border-neutral-200/70 dark:border-neutral-800 bg-neutral-50/80 dark:bg-neutral-900/60 text-[11px] text-neutral-500 dark:text-neutral-400 flex flex-wrap items-center justify-between gap-2">
-      <div class="flex items-center gap-3">
-        <span class="inline-flex items-center gap-1">
-          <kbd class="px-1 py-0.5 rounded bg-neutral-200/80 dark:bg-neutral-800 font-mono text-[10px]">↑</kbd>
-          <kbd class="px-1 py-0.5 rounded bg-neutral-200/80 dark:bg-neutral-800 font-mono text-[10px]">↓</kbd>
-          <span>移动光标</span>
-        </span>
-        <span class="inline-flex items-center gap-1">
-          <kbd class="px-1.5 py-0.5 rounded bg-neutral-200/80 dark:bg-neutral-800 font-mono text-[10px]">↵</kbd>
-          <span>跳转文章</span>
-        </span>
-        <span class="inline-flex items-center gap-1">
-          <kbd class="px-1.5 py-0.5 rounded bg-neutral-200/80 dark:bg-neutral-800 font-mono text-[10px]">Tab</kbd>
-          <span>切换匹配模式</span>
-        </span>
-      </div>
-      <div id="search-results-count" class="font-mono text-neutral-400 dark:text-neutral-500"></div>
     </div>
   </div>
 </div>
@@ -179,7 +137,6 @@ const { class: className = "" } = Astro.props;
     let currentMatches = [];
     let selectedIndex = -1;
 
-    // 智能检测 Mac / Windows 快捷键文案
     function updateKbdBadges() {
       const isMac = navigator.userAgent.includes('Mac');
       document.querySelectorAll('[data-search-kbd]').forEach((el) => {
@@ -187,7 +144,6 @@ const { class: className = "" } = Astro.props;
       });
     }
 
-    // 异步预加载全站搜索索引
     async function getIndex() {
       if (cachedIndex) return cachedIndex;
       try {
@@ -200,18 +156,16 @@ const { class: className = "" } = Astro.props;
       }
     }
 
-    // 高亮文本中的关键词
     function highlightText(text, query) {
       if (!query || !text) return text || '';
       const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const regex = new RegExp(`(${escaped})`, 'gi');
       return text.replace(
         regex,
-        '<mark class="bg-sky-500/20 text-sky-700 dark:text-sky-300 dark:bg-sky-400/25 px-0.5 py-0.2 rounded font-semibold">$1</mark>'
+        '<mark class="bg-sky-500/20 text-sky-700 dark:text-sky-300 dark:bg-sky-400/25 px-0.5 rounded font-semibold">$1</mark>'
       );
     }
 
-    // 全文模式下截取包含关键词的上下文片段 (Snippet)
     function extractSnippet(content, query) {
       if (!content || !query) return '';
       const lowerContent = content.toLowerCase();
@@ -234,7 +188,6 @@ const { class: className = "" } = Astro.props;
     function initSearchSystem() {
       updateKbdBadges();
 
-      // 避免重复挂载多个模态框冲突
       const modals = document.querySelectorAll('#search-modal');
       if (modals.length > 1) {
         for (let i = 1; i < modals.length; i++) {
@@ -247,15 +200,14 @@ const { class: className = "" } = Astro.props;
       const input = document.getElementById('search-modal-input');
       const clearBtn = document.getElementById('search-clear-btn');
       const closeBtn = document.getElementById('search-close-btn');
-      const idleState = document.getElementById('search-idle-state');
+      const resultsWrapper = document.getElementById('search-results-wrapper');
       const resultsList = document.getElementById('search-results-list');
       const emptyState = document.getElementById('search-empty-state');
       const countDisplay = document.getElementById('search-results-count');
       const modePills = document.querySelectorAll('.search-mode-pill');
 
-      if (!modal || !input || !modalContainer) return;
+      if (!modal || !input || !modalContainer || !resultsWrapper) return;
 
-      // 打开弹窗
       function openModal() {
         modal.classList.remove('opacity-0', 'pointer-events-none');
         modal.classList.add('opacity-100', 'pointer-events-auto');
@@ -263,7 +215,7 @@ const { class: className = "" } = Astro.props;
         modalContainer.classList.add('scale-100');
         document.body.style.overflow = 'hidden';
 
-        getIndex(); // 静默预热缓存
+        getIndex();
         setTimeout(() => {
           input.focus();
           if (input.value.trim().length > 0) {
@@ -272,7 +224,6 @@ const { class: className = "" } = Astro.props;
         }, 50);
       }
 
-      // 关闭弹窗
       function closeModal() {
         modal.classList.remove('opacity-100', 'pointer-events-auto');
         modal.classList.add('opacity-0', 'pointer-events-none');
@@ -282,7 +233,6 @@ const { class: className = "" } = Astro.props;
         selectedIndex = -1;
       }
 
-      // 切换匹配模式
       function switchMode(newMode) {
         if (currentMode === newMode) return;
         currentMode = newMode;
@@ -291,19 +241,17 @@ const { class: className = "" } = Astro.props;
           const isTarget = btn.getAttribute('data-search-mode') === newMode;
           btn.setAttribute('aria-selected', isTarget ? 'true' : 'false');
           if (isTarget) {
-            btn.className = 'search-mode-pill px-3 py-1 rounded-lg font-medium transition-all duration-150 flex items-center gap-1 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white shadow-sm';
+            btn.className = 'search-mode-pill px-2.5 py-1 rounded-md font-medium transition-all bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white shadow-sm';
           } else {
-            btn.className = 'search-mode-pill px-3 py-1 rounded-lg font-medium transition-all duration-150 flex items-center gap-1 text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200';
+            btn.className = 'search-mode-pill px-2.5 py-1 rounded-md font-medium transition-all text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200';
           }
         });
 
-        // 重新执行当前搜索
         if (input.value.trim().length > 0) {
           executeSearch(input.value.trim());
         }
       }
 
-      // 更新键盘选中的高亮样式
       function updateSelection() {
         const items = resultsList.querySelectorAll('[data-search-item]');
         items.forEach((item, idx) => {
@@ -318,22 +266,20 @@ const { class: className = "" } = Astro.props;
         });
       }
 
-      // 核心搜索匹配算法
       async function executeSearch(query) {
         selectedIndex = -1;
 
         if (!query) {
-          idleState.classList.remove('hidden');
-          resultsList.classList.add('hidden');
-          emptyState.classList.add('hidden');
+          resultsWrapper.classList.add('hidden');
           resultsList.innerHTML = '';
+          emptyState.classList.add('hidden');
           if (clearBtn) clearBtn.classList.add('hidden');
           if (countDisplay) countDisplay.textContent = '';
           return;
         }
 
         if (clearBtn) clearBtn.classList.remove('hidden');
-        idleState.classList.add('hidden');
+        resultsWrapper.classList.remove('hidden');
 
         const index = await getIndex();
         const queryLower = query.toLowerCase();
@@ -341,7 +287,6 @@ const { class: className = "" } = Astro.props;
         let matches = [];
 
         if (currentMode === 'title') {
-          // 仅标题与标签匹配模式
           matches = index
             .map((item) => {
               const titleMatch = item.title.toLowerCase().includes(queryLower);
@@ -353,7 +298,6 @@ const { class: className = "" } = Astro.props;
             })
             .filter(Boolean);
         } else {
-          // 全文内容匹配模式 (包含标题、描述与正文全文)
           matches = index
             .map((item) => {
               const titleMatch = item.title.toLowerCase().includes(queryLower);
@@ -395,7 +339,6 @@ const { class: className = "" } = Astro.props;
         emptyState.classList.add('hidden');
         resultsList.classList.remove('hidden');
 
-        // 渲染匹配卡片
         resultsList.innerHTML = matches.map(({ item, matchType, snippet }, idx) => `
           <a
             href="/posts/${item.slug}"
@@ -446,7 +389,6 @@ const { class: className = "" } = Astro.props;
         }
       }
 
-      // 绑定唤醒按钮点击
       document.querySelectorAll('[data-search-open-btn]').forEach((btn) => {
         btn.onclick = (e) => {
           e.preventDefault();
@@ -454,19 +396,16 @@ const { class: className = "" } = Astro.props;
         };
       });
 
-      // 绑定模式切换点击
       modePills.forEach((btn) => {
         btn.onclick = () => {
           switchMode(btn.getAttribute('data-search-mode'));
         };
       });
 
-      // 输入监听
       input.oninput = (e) => {
         executeSearch(e.target.value.trim());
       };
 
-      // 清空按钮
       if (clearBtn) {
         clearBtn.onclick = () => {
           input.value = '';
@@ -475,19 +414,16 @@ const { class: className = "" } = Astro.props;
         };
       }
 
-      // 关闭按钮
       if (closeBtn) {
         closeBtn.onclick = closeModal;
       }
 
-      // 点击外部遮罩关闭
       modal.onclick = (e) => {
         if (!modalContainer.contains(e.target)) {
           closeModal();
         }
       };
 
-      // 键盘快捷键监听
       input.onkeydown = (e) => {
         if (e.key === 'Tab') {
           e.preventDefault();
@@ -530,7 +466,6 @@ const { class: className = "" } = Astro.props;
         }
       };
 
-      // 全局快捷键唤起 (Ctrl+K, Cmd+K, /)
       document.onkeydown = (e) => {
         if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
           e.preventDefault();
@@ -548,7 +483,6 @@ const { class: className = "" } = Astro.props;
           return;
         }
 
-        // 当不在输入框内时按下 '/' 快速唤起
         if (e.key === '/' && !['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) {
           e.preventDefault();
           openModal();
