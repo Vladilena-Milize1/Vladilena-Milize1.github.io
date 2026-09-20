@@ -19,6 +19,15 @@ export interface SiteConfig {
   footer: {
     sinceYear: number;
   };
+  comment?: {
+    enable: boolean;
+    serverURL: string;
+    lang?: string;
+    login?: "enable" | "disable" | "force";
+    meta?: string[];
+    requiredMeta?: string[];
+    pageSize?: number;
+  };
 }
 
 export const SITE: SiteConfig = {
@@ -31,7 +40,6 @@ export const SITE: SiteConfig = {
   navItems: [
     { title: "首页", href: "/" },
     { title: "文章", href: "/posts" },
-    { title: "关于", href: "/about" },
   ],
   socials: {
     github: "https://github.com/Vladilena-Milize1",
@@ -40,5 +48,14 @@ export const SITE: SiteConfig = {
   },
   footer: {
     sinceYear: 2026,
+  },
+  comment: {
+    enable: true,
+    serverURL: "", // Waline 服务端 URL，如 https://waline.yourdomain.com 或 Vercel 部署地址
+    lang: "zh-CN",
+    login: "enable", // 支持 GitHub 授权登录，同时支持免登录匿名评论
+    meta: ["nick", "mail", "link"],
+    requiredMeta: [], // 匿名评论无必填项约束
+    pageSize: 10,
   },
 };

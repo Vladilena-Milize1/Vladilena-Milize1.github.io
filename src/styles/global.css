@@ -156,3 +156,17 @@ html.wallpaper-mode .wallpaper-mode-toggle {
   font-size: 1.05em;
   text-rendering: auto;
 }
+
+/* Waline 评论区样式定制与暗色模式适配 */
+:root {
+  --waline-theme-color: #0284c7;
+  --waline-active-color: #0369a1;
+  --waline-font-size: 15px;
+}
+
+html.dark {
+  --waline-theme-color: #38bdf8;
+  --waline-active-color: #7dd3fc;
+  --waline-bg-color: transparent;
+  --waline-bg-color-light: rgba(255, 255, 255, 0.05);
+}

@@ -1,5 +1,6 @@
 ---
 import BaseLayout from './BaseLayout.astro';
+import Comment from '../components/common/Comment.astro';
 
 interface Props {
   title: string;
@@ -62,5 +63,8 @@ const formattedDate = new Intl.DateTimeFormat('zh-CN', {
     <div class="prose dark:prose-invert max-w-none">
       <slot />
     </div>
+
+    <!-- 评论交流区 -->
+    <Comment />
   </article>
 </BaseLayout>

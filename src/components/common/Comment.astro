@@ -1,0 +1,95 @@
+---
+import { SITE } from '../../site.config';
+
+interface Props {
+  path?: string;
+}
+
+const { path } = Astro.props;
+const commentConfig = SITE.comment;
+const isEnabled = commentConfig?.enable ?? false;
+const serverURL = commentConfig?.serverURL?.trim() || "";
+---
+
+{isEnabled && (
+  <section class="mt-12 pt-8 border-t border-neutral-200/80 dark:border-neutral-800/80" id="comments">
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="text-lg font-bold text-neutral-900 dark:text-neutral-50 tracking-tight flex items-center gap-2">
+        <span>评论交流</span>
+        <span class="text-xs font-normal px-2 py-0.5 rounded-full bg-sky-100 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 font-mono">
+          GitHub 登录 / 匿名免登录
+        </span>
+      </h3>
+    </div>
+
+    {serverURL && (
+      <div id="waline" data-server-url={serverURL} data-path={path || ""}></div>
+    )}
+
+    {!serverURL && (
+      <div class="p-6 rounded-2xl bg-neutral-100/70 dark:bg-neutral-800/50 border border-neutral-200/80 dark:border-neutral-700/60 text-sm text-neutral-600 dark:text-neutral-300 space-y-3">
+        <div class="font-semibold text-neutral-800 dark:text-neutral-100 flex items-center gap-2">
+          <span>💬</span>
+          <span>评论系统已就绪（支持 GitHub 登录 与 匿名评论）</span>
+        </div>
+        <p class="text-xs leading-relaxed text-neutral-500 dark:text-neutral-400">
+          前端已完整集成 Waline 评论引擎。目前尚未配置后端连接地址，请在 <code class="px-1.5 py-0.5 rounded bg-neutral-200/70 dark:bg-neutral-700 font-mono text-[11px] text-sky-600 dark:text-sky-400">src/site.config.ts</code> 中的 <code class="px-1.5 py-0.5 rounded bg-neutral-200/70 dark:bg-neutral-700 font-mono text-[11px] text-sky-600 dark:text-sky-400">comment.serverURL</code> 填入您的服务端 URL。
+        </p>
+
+        <div class="pt-2 text-xs space-y-1.5 border-t border-neutral-200/60 dark:border-neutral-700/60">
+          <div class="font-medium text-neutral-700 dark:text-neutral-200">快速获取免费后端地址（约 2 分钟）：</div>
+          <ol class="list-decimal list-inside space-y-1 text-neutral-500 dark:text-neutral-400">
+            <li>访问 <a href="https://waline.js.org/guide/get-started/" target="_blank" rel="noopener noreferrer" class="text-sky-600 dark:text-sky-400 hover:underline">Waline 官方免费部署指南</a>；</li>
+            <li>使用 Vercel + Supabase / LeanCloud 进行一键免费托管；</li>
+            <li>将生成的专属域名（如 <code class="font-mono text-[11px]">https://your-waline.vercel.app</code>）填写至 <code class="font-mono text-[11px]">site.config.ts</code> 即可正式开启留言！</li>
+          </ol>
+        </div>
+      </div>
+    )}
+  </section>
+)}
+
+{isEnabled && serverURL && (
+  <script>
+    import { init } from '@waline/client';
+    import '@waline/client/style';
+
+    let walineInstance: any = null;
+
+    function initWaline() {
+      const el = document.getElementById('waline');
+      if (!el) return;
+
+      const serverURL = el.getAttribute('data-server-url');
+      if (!serverURL) return;
+
+      const customPath = el.getAttribute('data-path') || window.location.pathname;
+
+      if (walineInstance) {
+        try {
+          walineInstance.destroy();
+        } catch (e) {
+          // ignore cleanup errors
+        }
+      }
+
+      walineInstance = init({
+        el: '#waline',
+        serverURL,
+        path: customPath,
+        lang: 'zh-CN',
+        dark: 'html.dark',
+        login: 'enable', // 启用登录支持（包含 GitHub、QQ 等 OAuth），同时保留游客模式
+        meta: ['nick', 'mail', 'link'],
+        requiredMeta: [], // 无必填项，支持完全匿名发评
+        pageSize: 10,
+        reaction: false,
+        search: false,
+      });
+    }
+
+    initWaline();
+    document.addEventListener('astro:page-load', initWaline);
+  </script>
+)}
+
