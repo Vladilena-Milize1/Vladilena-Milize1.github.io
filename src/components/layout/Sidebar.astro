@@ -3,7 +3,9 @@ import { SITE } from '../../site.config';
 import { getCollection } from 'astro:content';
 
 const posts = await getCollection('blog', ({ data }) => !data.draft);
-const allTags = [...new Set(posts.flatMap((post) => post.data.tags))];
+const predefinedTags = ['杂谈', '学习', '补档'];
+const existingTags = [...new Set(posts.flatMap((post) => post.data.tags || []))];
+const allTags = [...predefinedTags, ...existingTags.filter((t) => !predefinedTags.includes(t))];
 
 const rawEmail = SITE.socials.email || '';
 const cleanEmail = rawEmail.replace(/^mailto:/i, '');
@@ -118,24 +120,20 @@ const emailHref = rawEmail ? (rawEmail.startsWith('mailto:') ? rawEmail : `mailt
     </div>
   </div>
 
-  <!-- 标签云（占位模块） -->
+  <!-- 标签导航 -->
   <div class="p-5 rounded-2xl bg-white/70 dark:bg-neutral-900/70 backdrop-blur-md border border-neutral-200/80 dark:border-neutral-800/80 shadow-sm hidden lg:block">
     <h3 class="text-xs font-bold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider mb-3">
-      [标签]
+      文章标签
     </h3>
     <div class="flex flex-wrap gap-1.5">
-      <span class="px-2.5 py-1 rounded-md text-xs font-medium bg-neutral-100 dark:bg-neutral-800/90 text-neutral-500 dark:text-neutral-400">
-        #
-      </span>
-      <span class="px-2.5 py-1 rounded-md text-xs font-medium bg-neutral-100 dark:bg-neutral-800/90 text-neutral-500 dark:text-neutral-400">
-        #
-      </span>
-      <span class="px-2.5 py-1 rounded-md text-xs font-medium bg-neutral-100 dark:bg-neutral-800/90 text-neutral-500 dark:text-neutral-400">
-        #
-      </span>
-      <span class="px-2.5 py-1 rounded-md text-xs font-medium bg-neutral-100 dark:bg-neutral-800/90 text-neutral-500 dark:text-neutral-400">
-        #
-      </span>
+      {allTags.map((tag) => (
+        <a
+          href={`/posts?tag=${encodeURIComponent(tag)}`}
+          class="px-2.5 py-1 rounded-md text-xs font-medium bg-neutral-100 dark:bg-neutral-800/90 hover:bg-sky-100 hover:text-sky-600 dark:hover:bg-sky-950/60 dark:hover:text-sky-400 text-neutral-600 dark:text-neutral-300 transition-colors"
+        >
+          #{tag}
+        </a>
+      ))}
     </div>
   </div>
 </div>

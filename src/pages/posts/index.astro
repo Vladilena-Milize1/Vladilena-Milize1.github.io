@@ -9,26 +9,177 @@ const sortedPosts = posts.sort((a, b) => b.data.date.valueOf() - a.data.date.val
 const PAGE_SIZE = 10;
 const totalPosts = sortedPosts.length;
 const totalPages = Math.max(1, Math.ceil(totalPosts / PAGE_SIZE));
+
+// 标签分类配置：核心规范标签为「杂谈 / 学习 / 补档」
+const predefinedTags = ['杂谈', '学习', '补档'];
+const extractedTags = [...new Set(posts.flatMap((p) => p.data.tags || []))];
+const filterTags = [
+  ...predefinedTags,
+  ...extractedTags.filter((t) => !predefinedTags.includes(t)),
+];
+
+// 计算各标签的文章数量
+const tagCounts: Record<string, number> = {
+  all: totalPosts,
+};
+filterTags.forEach((t) => {
+  tagCounts[t] = posts.filter((p) => p.data.tags?.includes(t)).length;
+});
+
+// 计算所有存在的年份
+const availableYears = [
+  ...new Set(posts.map((p) => p.data.date.getFullYear().toString())),
+].sort((a, b) => b.localeCompare(a));
+
+const yearCounts: Record<string, number> = {
+  all: totalPosts,
+};
+availableYears.forEach((y) => {
+  yearCounts[y] = posts.filter((p) => p.data.date.getFullYear().toString() === y).length;
+});
 ---
 
-<BaseLayout title="全部文章" description="占位符">
+<BaseLayout title="全部文章" description="博客全部文章归档列表，支持按杂谈、学习、补档等标签分类或按发布时间维度筛选。">
   <!-- 页面顶部概览卡片 -->
-  <section class="mb-6 p-6 rounded-2xl bg-white/60 dark:bg-neutral-900/60 backdrop-blur-sm border border-neutral-200/70 dark:border-neutral-800/70 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+  <section class="mb-5 p-5 sm:p-6 rounded-2xl bg-white/60 dark:bg-neutral-900/60 backdrop-blur-sm border border-neutral-200/70 dark:border-neutral-800/70 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
     <div>
       <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-neutral-50 mb-1 flex items-center gap-2">
         <span class="w-2.5 h-2.5 rounded-full bg-sky-500 inline-block"></span>
         全部文章
       </h1>
       <p class="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400">
-        
+        记录思考与探索，支持按标签分类及发布年份/时间维度多维筛选。
       </p>
     </div>
     <div class="text-xs font-mono px-3.5 py-1.5 rounded-xl bg-neutral-100/70 dark:bg-neutral-800/70 border border-neutral-200/50 dark:border-neutral-700/50 text-neutral-600 dark:text-neutral-300 shrink-0 self-start sm:self-center shadow-sm">
-      共 <span id="total-count-badge">{totalPosts}</span> 篇 • 每页 {PAGE_SIZE} 篇
+      共 <span id="total-count-badge" class="font-bold text-neutral-900 dark:text-neutral-100">{totalPosts}</span> 篇 • 每页 {PAGE_SIZE} 篇
     </div>
   </section>
 
-  <!-- 文章卡片列表（完全对齐首页最新文章的独立分隔卡片与透明度） -->
+  <!-- 筛选与排序控制面板（标签筛选 + 时间筛选） -->
+  <section class="mb-6 p-5 rounded-2xl bg-white/60 dark:bg-neutral-900/60 backdrop-blur-sm border border-neutral-200/70 dark:border-neutral-800/70 shadow-sm space-y-4">
+    <!-- 1. 按标签筛选 (杂谈 / 学习 / 补档) -->
+    <div class="space-y-2">
+      <div class="flex items-center justify-between text-xs font-bold text-neutral-500 dark:text-neutral-400">
+        <span class="flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+          </svg>
+          按标签筛选
+        </span>
+        <button
+          id="reset-filter-btn"
+          type="button"
+          class="hidden text-[11px] font-medium text-sky-600 dark:text-sky-400 hover:underline cursor-pointer"
+        >
+          重置全部筛选 ✕
+        </button>
+      </div>
+
+      <div id="tag-filter-group" class="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          data-filter-tag="all"
+          class="filter-tag-btn px-3 py-1.5 rounded-xl text-xs font-semibold transition-all border border-neutral-900 dark:border-neutral-100 bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900 shadow-sm"
+        >
+          全部
+          <span class="ml-1 text-[11px] opacity-75 font-mono">({tagCounts['all']})</span>
+        </button>
+
+        {filterTags.map((tag) => (
+          <button
+            type="button"
+            data-filter-tag={tag}
+            class="filter-tag-btn px-3 py-1.5 rounded-xl text-xs font-medium transition-all border border-neutral-200/80 dark:border-neutral-700/80 bg-white/70 dark:bg-neutral-800/70 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600"
+          >
+            {tag}
+            <span class="ml-1 text-[11px] opacity-60 font-mono">({tagCounts[tag] || 0})</span>
+          </button>
+        ))}
+      </div>
+    </div>
+
+    <!-- 分隔线 -->
+    <div class="border-t border-neutral-200/60 dark:border-neutral-800/60 pt-3">
+      <!-- 2. 按时间与排序方式 -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+        <!-- 时间筛选 (全部时间 / 各个年份) -->
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="text-xs font-bold text-neutral-500 dark:text-neutral-400 flex items-center gap-1.5 shrink-0">
+            <svg class="w-3.5 h-3.5 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+            按时间筛选
+          </span>
+          <div id="year-filter-group" class="flex flex-wrap items-center gap-1.5">
+            <button
+              type="button"
+              data-filter-year="all"
+              class="filter-year-btn px-2.5 py-1 rounded-lg text-xs font-semibold transition-all border border-neutral-900 dark:border-neutral-100 bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900 shadow-sm"
+            >
+              全部时间
+            </button>
+            {availableYears.map((year) => (
+              <button
+                type="button"
+                data-filter-year={year}
+                class="filter-year-btn px-2.5 py-1 rounded-lg text-xs font-medium transition-all border border-neutral-200/80 dark:border-neutral-700/80 bg-white/70 dark:bg-neutral-800/70 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-700"
+              >
+                {year} 年
+                <span class="ml-1 text-[10px] opacity-60 font-mono">({yearCounts[year] || 0})</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <!-- 排序方式 (最新优先 / 最早优先) -->
+        <div class="flex items-center gap-2 shrink-0 self-start sm:self-auto">
+          <span class="text-xs font-bold text-neutral-500 dark:text-neutral-400">排序：</span>
+          <div id="sort-group" class="inline-flex p-0.5 rounded-xl bg-neutral-100 dark:bg-neutral-800 border border-neutral-200/70 dark:border-neutral-700/70">
+            <button
+              type="button"
+              data-sort="desc"
+              class="sort-toggle-btn px-2.5 py-1 rounded-lg text-xs font-semibold transition-all bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white shadow-sm"
+              title="按发布时间从新到旧"
+            >
+              最新优先
+            </button>
+            <button
+              type="button"
+              data-sort="asc"
+              class="sort-toggle-btn px-2.5 py-1 rounded-lg text-xs font-medium transition-all text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white"
+              title="按发布时间从旧到新"
+            >
+              最早优先
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 筛选无结果时的友好空状态 -->
+  <div
+    id="filter-empty-state"
+    class="hidden p-12 text-center rounded-2xl bg-white/60 dark:bg-neutral-900/60 backdrop-blur-sm border border-neutral-200/70 dark:border-neutral-800/70 space-y-3"
+  >
+    <div class="text-3xl">🔍</div>
+    <div class="text-base font-bold text-neutral-800 dark:text-neutral-200">
+      未找到符合筛选条件的文章
+    </div>
+    <p class="text-xs text-neutral-500 dark:text-neutral-400 max-w-sm mx-auto">
+      当前选中的标签或时间范围内暂无论文内容，请尝试切换其它标签或清空筛选。
+    </p>
+    <button
+      id="empty-reset-btn"
+      type="button"
+      class="inline-flex items-center gap-1 px-4 py-2 text-xs font-semibold rounded-xl bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900 hover:opacity-90 transition-opacity shadow-sm cursor-pointer"
+    >
+      重置全部筛选条件
+    </button>
+  </div>
+
+  <!-- 文章卡片列表 -->
   <div id="posts-container" class="space-y-4 scroll-mt-28">
     {sortedPosts.map((post, index) => {
       const formattedDate = new Intl.DateTimeFormat('zh-CN', {
@@ -38,8 +189,6 @@ const totalPages = Math.max(1, Math.ceil(totalPosts / PAGE_SIZE));
       }).format(post.data.date);
 
       const wordCount = countWords(post.body);
-
-      // 默认前 10 篇渲染可见，其余先隐藏（客户端 JS 会根据页码精确受控）
       const isInitiallyVisible = index < PAGE_SIZE;
 
       return (
@@ -49,6 +198,9 @@ const totalPages = Math.max(1, Math.ceil(totalPosts / PAGE_SIZE));
             !isInitiallyVisible && "hidden"
           ]}
           data-post-index={index}
+          data-tags={JSON.stringify(post.data.tags || [])}
+          data-year={post.data.date.getFullYear().toString()}
+          data-timestamp={post.data.date.valueOf().toString()}
         >
           <div class="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 mb-2">
             <h2 class="text-lg font-bold text-neutral-900 dark:text-neutral-100 group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
@@ -77,9 +229,14 @@ const totalPages = Math.max(1, Math.ceil(totalPosts / PAGE_SIZE));
           </p>
           <div class="flex flex-wrap gap-1.5 pt-1">
             {post.data.tags.map((tag) => (
-              <span class="px-2 py-0.5 rounded-md text-[11px] font-medium bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300">
+              <button
+                type="button"
+                data-card-tag={tag}
+                class="card-tag-badge relative z-20 px-2 py-0.5 rounded-md text-[11px] font-medium bg-neutral-100 dark:bg-neutral-800 hover:bg-sky-100 hover:text-sky-600 dark:hover:bg-sky-950/60 dark:hover:text-sky-400 text-neutral-600 dark:text-neutral-300 transition-colors cursor-pointer"
+                title={`按标签「${tag}」筛选`}
+              >
                 #{tag}
-              </span>
+              </button>
             ))}
           </div>
         </article>
@@ -103,7 +260,7 @@ const totalPages = Math.max(1, Math.ceil(totalPosts / PAGE_SIZE));
   >
     <div class="text-xs text-neutral-500 dark:text-neutral-400 font-medium order-2 sm:order-1">
       第 <span id="current-page-num" class="font-bold text-neutral-900 dark:text-neutral-100">1</span> / <span id="total-pages-num" class="font-bold text-neutral-900 dark:text-neutral-100">{totalPages}</span> 页
-      <span class="text-neutral-400 dark:text-neutral-500 ml-1.5">(共 {totalPosts} 篇)</span>
+      <span id="filtered-total-summary" class="text-neutral-400 dark:text-neutral-500 ml-1.5">(共 {totalPosts} 篇)</span>
     </div>
 
     <div class="flex items-center gap-1.5 order-1 sm:order-2">
@@ -111,7 +268,7 @@ const totalPages = Math.max(1, Math.ceil(totalPosts / PAGE_SIZE));
       <button
         id="prev-page-btn"
         type="button"
-        class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-xl border border-neutral-200/80 dark:border-neutral-700/80 bg-white/70 dark:bg-neutral-800/70 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors disabled:opacity-40 disabled:pointer-events-none"
+        class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-xl border border-neutral-200/80 dark:border-neutral-700/80 bg-white/70 dark:bg-neutral-800/70 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
         aria-label="上一页"
       >
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -120,14 +277,14 @@ const totalPages = Math.max(1, Math.ceil(totalPosts / PAGE_SIZE));
         <span>上一页</span>
       </button>
 
-      <!-- 页码数字容器（由脚本根据总页数动态填充） -->
+      <!-- 页码数字容器（由脚本根据过滤后的总页数动态填充） -->
       <div id="page-numbers-container" class="flex items-center gap-1"></div>
 
       <!-- 下一页 -->
       <button
         id="next-page-btn"
         type="button"
-        class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-xl border border-neutral-200/80 dark:border-neutral-700/80 bg-white/70 dark:bg-neutral-800/70 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors disabled:opacity-40 disabled:pointer-events-none"
+        class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-xl border border-neutral-200/80 dark:border-neutral-700/80 bg-white/70 dark:bg-neutral-800/70 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
         aria-label="下一页"
       >
         <span>下一页</span>
@@ -140,102 +297,202 @@ const totalPages = Math.max(1, Math.ceil(totalPosts / PAGE_SIZE));
 </BaseLayout>
 
 <script is:inline>
-  function setupPagination() {
-    const nav = document.getElementById('pagination-nav');
+  function setupFilteringAndPagination() {
     const container = document.getElementById('posts-container');
-    if (!nav || !container) return;
+    const paginationNav = document.getElementById('pagination-nav');
+    if (!container || !paginationNav) return;
 
-    const cards = container.querySelectorAll('.post-card');
-    const totalPosts = cards.length;
-    const pageSize = parseInt(nav.dataset.pageSize || '10', 10);
-    // 最小不小于 1
-    const totalPages = Math.max(1, Math.ceil(totalPosts / pageSize));
+    // 获取所有卡片 DOM 节点（静态数组备份，用于排序与过滤）
+    const allCards = Array.from(container.querySelectorAll('.post-card'));
+    const pageSize = parseInt(paginationNav.dataset.pageSize || '10', 10);
 
+    // DOM 元素引用
+    const tagButtons = document.querySelectorAll('.filter-tag-btn');
+    const yearButtons = document.querySelectorAll('.filter-year-btn');
+    const sortButtons = document.querySelectorAll('.sort-toggle-btn');
+    const resetBtn = document.getElementById('reset-filter-btn');
+    const emptyResetBtn = document.getElementById('empty-reset-btn');
+    const emptyState = document.getElementById('filter-empty-state');
+    const totalCountBadge = document.getElementById('total-count-badge');
+    const filteredTotalSummary = document.getElementById('filtered-total-summary');
     const currentPageNumEl = document.getElementById('current-page-num');
     const totalPagesNumEl = document.getElementById('total-pages-num');
     const prevBtn = document.getElementById('prev-page-btn');
     const nextBtn = document.getElementById('next-page-btn');
     const numbersContainer = document.getElementById('page-numbers-container');
+    const cardTagBadges = document.querySelectorAll('.card-tag-badge');
 
-    if (totalPagesNumEl) {
-      totalPagesNumEl.textContent = String(totalPages);
-    }
-
-    function getPageFromURL() {
+    // 从 URL 解析状态
+    function getFilterStateFromURL() {
       const params = new URLSearchParams(window.location.search);
+      const tag = params.get('tag') || 'all';
+      const year = params.get('year') || 'all';
+      const sort = params.get('sort') === 'asc' ? 'asc' : 'desc';
       const page = parseInt(params.get('page') || '1', 10);
-      if (isNaN(page) || page < 1) return 1;
-      if (page > totalPages) return totalPages;
-      return page;
+      return {
+        tag,
+        year,
+        sort,
+        page: isNaN(page) || page < 1 ? 1 : page,
+      };
     }
 
-    let currentPage = getPageFromURL();
+    let state = getFilterStateFromURL();
 
-    function renderPage(page, shouldScroll = false) {
-      currentPage = Math.max(1, Math.min(page, totalPages));
+    // 核心渲染函数
+    function render(shouldScroll = false) {
+      // 1. 过滤卡片
+      const matchedCards = allCards.filter((card) => {
+        let cardTags = [];
+        try {
+          cardTags = JSON.parse(card.dataset.tags || '[]');
+        } catch (e) {
+          cardTags = [];
+        }
+        const cardYear = card.dataset.year || '';
 
-      // 更新卡片可见性 (一页最多 10 篇)
-      const startIndex = (currentPage - 1) * pageSize;
+        const tagMatch = state.tag === 'all' || cardTags.includes(state.tag);
+        const yearMatch = state.year === 'all' || cardYear === state.year;
+        return tagMatch && yearMatch;
+      });
+
+      // 2. 排序卡片
+      matchedCards.sort((a, b) => {
+        const timeA = parseInt(a.dataset.timestamp || '0', 10);
+        const timeB = parseInt(b.dataset.timestamp || '0', 10);
+        return state.sort === 'asc' ? timeA - timeB : timeB - timeA;
+      });
+
+      // 重新挂载排好序的卡片到容器中
+      matchedCards.forEach((card) => container.appendChild(card));
+
+      // 3. 计算分页
+      const totalMatched = matchedCards.length;
+      const totalPages = Math.max(1, Math.ceil(totalMatched / pageSize));
+      state.page = Math.max(1, Math.min(state.page, totalPages));
+
+      const startIndex = (state.page - 1) * pageSize;
       const endIndex = startIndex + pageSize;
 
-      cards.forEach((card, idx) => {
-        if (idx >= startIndex && idx < endIndex) {
+      // 4. 显示/隐藏卡片
+      allCards.forEach((card) => {
+        const isMatched = matchedCards.includes(card);
+        if (!isMatched) {
+          card.classList.add('hidden');
+          return;
+        }
+        const matchedIndex = matchedCards.indexOf(card);
+        if (matchedIndex >= startIndex && matchedIndex < endIndex) {
           card.classList.remove('hidden');
         } else {
           card.classList.add('hidden');
         }
       });
 
-      // 更新当前页码显示
-      if (currentPageNumEl) {
-        currentPageNumEl.textContent = String(currentPage);
-      }
-
-      // 禁用/启用 上一页 / 下一页
-      if (prevBtn) {
-        prevBtn.disabled = currentPage <= 1;
-      }
-      if (nextBtn) {
-        nextBtn.disabled = currentPage >= totalPages;
-      }
-
-      // 动态生成数字按钮
-      renderPageNumbers();
-
-      // 同步 URL 参数
-      const url = new URL(window.location.href);
-      if (currentPage === 1) {
-        url.searchParams.delete('page');
+      // 5. 空状态提示
+      if (totalMatched === 0) {
+        if (emptyState) emptyState.classList.remove('hidden');
+        if (paginationNav) paginationNav.classList.add('hidden');
       } else {
-        url.searchParams.set('page', String(currentPage));
+        if (emptyState) emptyState.classList.add('hidden');
+        if (paginationNav) paginationNav.classList.remove('hidden');
       }
-      window.history.replaceState({ page: currentPage }, '', url.toString());
 
-      // 平滑滚动回顶部列表起始位置
+      // 6. 状态栏与摘要更新
+      if (totalCountBadge) {
+        totalCountBadge.textContent = String(totalMatched);
+      }
+      if (filteredTotalSummary) {
+        filteredTotalSummary.textContent = `(共 ${totalMatched} 篇)`;
+      }
+      if (currentPageNumEl) {
+        currentPageNumEl.textContent = String(state.page);
+      }
+      if (totalPagesNumEl) {
+        totalPagesNumEl.textContent = String(totalPages);
+      }
+
+      // 上一页/下一页可用性
+      if (prevBtn) prevBtn.disabled = state.page <= 1;
+      if (nextBtn) nextBtn.disabled = state.page >= totalPages;
+
+      // 7. 更新按钮高亮样式
+      updateButtonStyles();
+
+      // 8. 动态生成数字页码按钮
+      renderPaginationNumbers(totalPages);
+
+      // 9. 同步 URL 参数
+      syncURL();
+
+      // 平滑滚动
       if (shouldScroll) {
-        const topY = container.getBoundingClientRect().top + window.pageYOffset - 100;
+        const topY = container.getBoundingClientRect().top + window.pageYOffset - 120;
         window.scrollTo({ top: Math.max(0, topY), behavior: 'smooth' });
       }
     }
 
-    function renderPageNumbers() {
+    function updateButtonStyles() {
+      // 标签按钮样式
+      tagButtons.forEach((btn) => {
+        const tag = btn.dataset.filterTag;
+        const isActive = tag === state.tag;
+        if (isActive) {
+          btn.className = 'filter-tag-btn px-3 py-1.5 rounded-xl text-xs font-semibold transition-all border border-neutral-900 dark:border-neutral-100 bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900 shadow-sm cursor-pointer scale-[1.02]';
+        } else {
+          btn.className = 'filter-tag-btn px-3 py-1.5 rounded-xl text-xs font-medium transition-all border border-neutral-200/80 dark:border-neutral-700/80 bg-white/70 dark:bg-neutral-800/70 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600 cursor-pointer';
+        }
+      });
+
+      // 年份按钮样式
+      yearButtons.forEach((btn) => {
+        const year = btn.dataset.filterYear;
+        const isActive = year === state.year;
+        if (isActive) {
+          btn.className = 'filter-year-btn px-2.5 py-1 rounded-lg text-xs font-semibold transition-all border border-neutral-900 dark:border-neutral-100 bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900 shadow-sm cursor-pointer scale-[1.02]';
+        } else {
+          btn.className = 'filter-year-btn px-2.5 py-1 rounded-lg text-xs font-medium transition-all border border-neutral-200/80 dark:border-neutral-700/80 bg-white/70 dark:bg-neutral-800/70 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-700 cursor-pointer';
+        }
+      });
+
+      // 排序按钮样式
+      sortButtons.forEach((btn) => {
+        const sort = btn.dataset.sort;
+        const isActive = sort === state.sort;
+        if (isActive) {
+          btn.className = 'sort-toggle-btn px-2.5 py-1 rounded-lg text-xs font-semibold transition-all bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white shadow-sm cursor-pointer';
+        } else {
+          btn.className = 'sort-toggle-btn px-2.5 py-1 rounded-lg text-xs font-medium transition-all text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white cursor-pointer';
+        }
+      });
+
+      // 重置按钮显隐（存在非默认筛选时展示）
+      const hasActiveFilter = state.tag !== 'all' || state.year !== 'all' || state.sort !== 'desc';
+      if (resetBtn) {
+        if (hasActiveFilter) {
+          resetBtn.classList.remove('hidden');
+        } else {
+          resetBtn.classList.add('hidden');
+        }
+      }
+    }
+
+    function renderPaginationNumbers(totalPages) {
       if (!numbersContainer) return;
       numbersContainer.innerHTML = '';
 
-      // 生成页码序列（当总页数较多时智能显示省略号）
+      if (totalPages <= 1) return;
+
       const pagesToShow = [];
       if (totalPages <= 7) {
         for (let i = 1; i <= totalPages; i++) pagesToShow.push(i);
       } else {
         pagesToShow.push(1);
-        let start = Math.max(2, currentPage - 1);
-        let end = Math.min(totalPages - 1, currentPage + 1);
+        let start = Math.max(2, state.page - 1);
+        let end = Math.min(totalPages - 1, state.page + 1);
 
-        if (currentPage <= 3) {
-          end = 4;
-        } else if (currentPage >= totalPages - 2) {
-          start = totalPages - 3;
-        }
+        if (state.page <= 3) end = 4;
+        else if (state.page >= totalPages - 2) start = totalPages - 3;
 
         if (start > 2) pagesToShow.push('...');
         for (let i = start; i <= end; i++) pagesToShow.push(i);
@@ -252,18 +509,19 @@ const totalPages = Math.max(1, Math.ceil(totalPosts / PAGE_SIZE));
         } else {
           const btn = document.createElement('button');
           btn.type = 'button';
-          const isCurrent = item === currentPage;
-          btn.className = `w-8 h-8 flex items-center justify-center text-xs font-semibold rounded-xl transition-all ${
+          const isCurrent = item === state.page;
+          btn.className = `w-8 h-8 flex items-center justify-center text-xs font-semibold rounded-xl transition-all cursor-pointer ${
             isCurrent
               ? 'bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900 shadow-sm scale-105'
-              : 'border border-neutral-200/80 dark:border-neutral-700/80 bg-white/70 dark:bg-neutral-800/70 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700'
+              : 'border border-neutral-200/80 dark:border-neutral-700/80 bg-white/70 dark:bg-neutral-800/70 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-700'
           }`;
           btn.textContent = String(item);
           btn.setAttribute('aria-label', `跳转到第 ${item} 页`);
           if (isCurrent) btn.setAttribute('aria-current', 'page');
           btn.addEventListener('click', () => {
-            if (item !== currentPage) {
-              renderPage(item, true);
+            if (item !== state.page) {
+              state.page = item;
+              render(true);
             }
           });
           numbersContainer.appendChild(btn);
@@ -271,27 +529,109 @@ const totalPages = Math.max(1, Math.ceil(totalPosts / PAGE_SIZE));
       });
     }
 
+    function syncURL() {
+      const url = new URL(window.location.href);
+      if (state.tag === 'all') url.searchParams.delete('tag');
+      else url.searchParams.set('tag', state.tag);
+
+      if (state.year === 'all') url.searchParams.delete('year');
+      else url.searchParams.set('year', state.year);
+
+      if (state.sort === 'desc') url.searchParams.delete('sort');
+      else url.searchParams.set('sort', state.sort);
+
+      if (state.page === 1) url.searchParams.delete('page');
+      else url.searchParams.set('page', String(state.page));
+
+      window.history.replaceState({ ...state }, '', url.toString());
+    }
+
+    // 事件绑定：标签点击
+    tagButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const tag = btn.dataset.filterTag || 'all';
+        if (state.tag !== tag) {
+          state.tag = tag;
+          state.page = 1;
+          render(false);
+        }
+      });
+    });
+
+    // 事件绑定：年份点击
+    yearButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const year = btn.dataset.filterYear || 'all';
+        if (state.year !== year) {
+          state.year = year;
+          state.page = 1;
+          render(false);
+        }
+      });
+    });
+
+    // 事件绑定：排序点击
+    sortButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const sort = btn.dataset.sort || 'desc';
+        if (state.sort !== sort) {
+          state.sort = sort;
+          render(false);
+        }
+      });
+    });
+
+    // 事件绑定：卡片内标签徽标点击联动筛选
+    cardTagBadges.forEach((badge) => {
+      badge.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const tag = badge.dataset.cardTag;
+        if (tag && state.tag !== tag) {
+          state.tag = tag;
+          state.page = 1;
+          render(true);
+        }
+      });
+    });
+
+    // 重置所有筛选
+    function resetAllFilters() {
+      state.tag = 'all';
+      state.year = 'all';
+      state.sort = 'desc';
+      state.page = 1;
+      render(false);
+    }
+
+    if (resetBtn) resetBtn.addEventListener('click', resetAllFilters);
+    if (emptyResetBtn) emptyResetBtn.addEventListener('click', resetAllFilters);
+
+    // 上一页/下一页
     if (prevBtn) {
       prevBtn.onclick = () => {
-        if (currentPage > 1) renderPage(currentPage - 1, true);
+        if (state.page > 1) {
+          state.page--;
+          render(true);
+        }
       };
     }
-
     if (nextBtn) {
       nextBtn.onclick = () => {
-        if (currentPage < totalPages) renderPage(currentPage + 1, true);
+        state.page++;
+        render(true);
       };
     }
 
-    // 浏览器前进/后退事件响应
+    // 浏览器后退/前进
     window.onpopstate = () => {
-      renderPage(getPageFromURL(), false);
+      state = getFilterStateFromURL();
+      render(false);
     };
 
-    // 首次渲染执行
-    renderPage(currentPage, false);
+    // 初始化渲染
+    render(false);
   }
 
-  setupPagination();
-  document.addEventListener('astro:page-load', setupPagination);
+  setupFilteringAndPagination();
+  document.addEventListener('astro:page-load', setupFilteringAndPagination);
 </script>
