@@ -75,7 +75,7 @@ html.zen-mode #blog-sidebar {
 }
 
 html.zen-mode #blog-main-content {
-  max-width: 56rem !important;
+  max-width: 74rem !important;
   margin-left: auto !important;
   margin-right: auto !important;
 }

@@ -1,0 +1,299 @@
+---
+import type { MarkdownHeading } from 'astro';
+
+interface Props {
+  headings: MarkdownHeading[];
+  isMobile?: boolean;
+}
+
+const { headings = [], isMobile = false } = Astro.props;
+
+// 过滤仅保留 h2, h3, h4 级标题（h1 通常为文章总标题）
+const filteredHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 4);
+---
+
+{filteredHeadings.length > 0 && !isMobile && (
+  <nav
+    aria-label="文章目录"
+    class="w-full rounded-2xl bg-white/75 dark:bg-neutral-900/75 backdrop-blur-md border border-neutral-200/80 dark:border-neutral-800/80 p-4 shadow-sm select-none transition-all duration-300"
+    data-toc-container
+  >
+    <div class="flex items-center justify-between pb-3 mb-2.5 border-b border-neutral-200/70 dark:border-neutral-800/70">
+      <div class="flex items-center gap-2 text-neutral-800 dark:text-neutral-100 font-semibold text-xs">
+        <svg class="w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h10M4 18h16" />
+        </svg>
+        <span>文章目录</span>
+        <span class="text-[10px] text-neutral-400 dark:text-neutral-500 font-mono">({filteredHeadings.length})</span>
+      </div>
+
+      <div class="flex items-center gap-1.5" title="文章阅读进度">
+        <span class="text-[10px] font-mono text-neutral-500 dark:text-neutral-400" data-toc-progress-text>0%</span>
+        <div class="w-10 h-1.5 rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden">
+          <div class="h-full bg-sky-500 transition-all duration-150 rounded-full" data-toc-progress-bar style="width: 0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <ul
+      class="space-y-0.5 max-h-[calc(100vh-14rem)] overflow-y-auto pr-1 text-xs text-neutral-600 dark:text-neutral-400 scroll-smooth custom-scrollbar"
+      data-toc-list
+    >
+      {filteredHeadings.map((heading) => {
+        const isH2 = heading.depth === 2;
+        const isH3 = heading.depth === 3;
+        const isH4 = heading.depth === 4;
+
+        return (
+          <li>
+            <a
+              href={`#${heading.slug}`}
+              data-toc-link
+              data-target-id={heading.slug}
+              class:list={[
+                "toc-link block py-1.5 px-2 transition-all rounded-lg truncate cursor-pointer",
+                isH2 && "font-semibold text-neutral-800 dark:text-neutral-200 hover:bg-neutral-100/70 dark:hover:bg-neutral-800/70 hover:text-sky-600 dark:hover:text-sky-400",
+                isH3 && "text-[11px] pl-4 border-l-2 border-neutral-200/60 dark:border-neutral-800 hover:border-sky-500 hover:text-sky-600 dark:hover:text-sky-400",
+                isH4 && "text-[10px] pl-6 border-l border-neutral-200/40 dark:border-neutral-800/60 hover:border-sky-500 hover:text-sky-600 dark:hover:text-sky-400",
+              ]}
+              title={heading.text}
+            >
+              {heading.text}
+            </a>
+          </li>
+        );
+      })}
+    </ul>
+  </nav>
+)}
+
+{filteredHeadings.length > 0 && isMobile && (
+  <>
+    <div class="fixed bottom-6 right-6 z-40 xl:hidden">
+      <button
+        type="button"
+        id="mobile-toc-toggle-btn"
+        class="flex items-center gap-1.5 px-3.5 py-2.5 rounded-full bg-neutral-900/90 dark:bg-neutral-100/95 text-white dark:text-neutral-900 shadow-xl backdrop-blur-md hover:scale-105 active:scale-95 transition-all text-xs font-semibold select-none cursor-pointer border border-white/20 dark:border-neutral-800"
+        aria-label="打开文章目录"
+      >
+        <svg class="w-4 h-4 text-sky-400 dark:text-sky-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h10M4 18h16" />
+        </svg>
+        <span>目录</span>
+        <span class="text-[10px] font-mono opacity-80" data-mobile-toc-progress>0%</span>
+      </button>
+    </div>
+
+    <div
+      id="mobile-toc-drawer"
+      class="fixed inset-0 z-50 flex flex-col justify-end bg-neutral-950/50 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-200 xl:hidden"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div
+        id="mobile-toc-drawer-panel"
+        class="w-full max-h-[75vh] bg-white dark:bg-neutral-900 rounded-t-3xl shadow-2xl border-t border-neutral-200 dark:border-neutral-800 flex flex-col translate-y-full transition-transform duration-250 ease-out p-5"
+      >
+        <div class="flex items-center justify-between pb-3 mb-3 border-b border-neutral-100 dark:border-neutral-800">
+          <div class="flex items-center gap-2 text-sm font-bold text-neutral-800 dark:text-neutral-100">
+            <svg class="w-4 h-4 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h10M4 18h16" />
+            </svg>
+            <span>文章目录</span>
+            <span class="text-xs text-neutral-400 font-mono">({filteredHeadings.length})</span>
+          </div>
+          <button
+            type="button"
+            id="mobile-toc-close-btn"
+            class="p-1 rounded-lg text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+            aria-label="关闭目录"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <ul class="space-y-1 overflow-y-auto max-h-[60vh] pr-1 text-sm text-neutral-700 dark:text-neutral-300">
+          {filteredHeadings.map((heading) => (
+            <li>
+              <a
+                href={`#${heading.slug}`}
+                data-toc-link
+                data-target-id={heading.slug}
+                class:list={[
+                  "toc-link block py-2 px-2.5 rounded-lg transition-colors truncate",
+                  heading.depth === 2 && "font-semibold text-neutral-900 dark:text-neutral-100 bg-neutral-100/50 dark:bg-neutral-800/40",
+                  heading.depth === 3 && "text-xs pl-6 text-neutral-600 dark:text-neutral-400 border-l-2 border-neutral-200 dark:border-neutral-700",
+                  heading.depth === 4 && "text-xs pl-8 text-neutral-500 dark:text-neutral-500 border-l border-neutral-200 dark:border-neutral-800",
+                ]}
+              >
+                {heading.text}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  </>
+)}
+
+<script>
+  function setupTOC() {
+    const links = document.querySelectorAll<HTMLAnchorElement>('[data-toc-link]');
+    if (links.length === 0) return;
+
+    const drawer = document.getElementById('mobile-toc-drawer');
+    const panel = document.getElementById('mobile-toc-drawer-panel');
+    const toggleBtn = document.getElementById('mobile-toc-toggle-btn');
+    const closeBtn = document.getElementById('mobile-toc-close-btn');
+
+    function openDrawer() {
+      if (!drawer || !panel) return;
+      drawer.classList.remove('opacity-0', 'pointer-events-none');
+      drawer.classList.add('opacity-100', 'pointer-events-auto');
+      panel.classList.remove('translate-y-full');
+      panel.classList.add('translate-y-0');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeDrawer() {
+      if (!drawer || !panel) return;
+      drawer.classList.remove('opacity-100', 'pointer-events-auto');
+      drawer.classList.add('opacity-0', 'pointer-events-none');
+      panel.classList.remove('translate-y-0');
+      panel.classList.add('translate-y-full');
+      document.body.style.overflow = '';
+    }
+
+    if (toggleBtn) toggleBtn.onclick = openDrawer;
+    if (closeBtn) closeBtn.onclick = closeDrawer;
+    if (drawer) {
+      drawer.onclick = (e) => {
+        if (!panel?.contains(e.target as Node)) {
+          closeDrawer();
+        }
+      };
+    }
+
+    // 目录项平滑点击跳转
+    links.forEach((link) => {
+      link.onclick = (e) => {
+        e.preventDefault();
+        const targetId = link.getAttribute('data-target-id');
+        if (!targetId) return;
+
+        const targetEl = document.getElementById(targetId);
+        if (!targetEl) return;
+
+        closeDrawer();
+
+        const navbarOffset = 85;
+        const elementPosition = targetEl.getBoundingClientRect().top + window.scrollY;
+        window.scrollTo({
+          top: Math.max(0, elementPosition - navbarOffset),
+          behavior: 'smooth',
+        });
+
+        window.history.pushState(null, '', '#' + targetId);
+
+        // 标题平滑脉冲提示
+        targetEl.classList.add('toc-target-pulse');
+        setTimeout(() => targetEl.classList.remove('toc-target-pulse'), 1800);
+      };
+    });
+
+    // ScrollSpy: 实时滚动高亮与阅读进度
+    function onScroll() {
+      const headings = Array.from(
+        document.querySelectorAll<HTMLElement>('#article-content h2, #article-content h3, #article-content h4')
+      );
+      if (headings.length === 0) return;
+
+      const scrollY = window.scrollY;
+      const offset = 110;
+
+      let currentId = '';
+      for (let i = 0; i < headings.length; i++) {
+        const h = headings[i];
+        const top = h.getBoundingClientRect().top + scrollY - offset;
+        if (scrollY >= top) {
+          currentId = h.id;
+        } else {
+          break;
+        }
+      }
+
+      if (!currentId && headings.length > 0) {
+        currentId = headings[0].id;
+      }
+
+      links.forEach((link) => {
+        const targetId = link.getAttribute('data-target-id');
+        const isCurrent = targetId === currentId;
+        const isH2 = link.classList.contains('font-semibold');
+
+        if (isCurrent) {
+          link.classList.add('text-sky-600', 'dark:text-sky-400', 'font-bold');
+          if (link.closest('nav[data-toc-container]')) {
+            link.classList.add('bg-sky-50', 'dark:bg-sky-950/60');
+          }
+          // 自动让桌面目录列表跟随滚动
+          const tocList = link.closest('[data-toc-list]');
+          if (tocList) {
+            const linkTop = link.offsetTop;
+            const linkHeight = link.offsetHeight;
+            const listScroll = tocList.scrollTop;
+            const listHeight = tocList.clientHeight;
+            if (linkTop < listScroll || linkTop + linkHeight > listScroll + listHeight) {
+              tocList.scrollTo({
+                top: Math.max(0, linkTop - listHeight / 2 + linkHeight / 2),
+                behavior: 'smooth',
+              });
+            }
+          }
+        } else {
+          link.classList.remove('text-sky-600', 'dark:text-sky-400', 'bg-sky-50', 'dark:bg-sky-950/60');
+          if (!isH2) {
+            link.classList.remove('font-bold');
+          }
+        }
+      });
+
+      // 计算阅读百分比
+      const article = document.getElementById('article-content');
+      if (article) {
+        const rect = article.getBoundingClientRect();
+        const totalHeight = article.offsetHeight - window.innerHeight;
+        const scrolled = Math.max(0, -rect.top);
+        const progress = totalHeight > 0 ? Math.min(100, Math.round((scrolled / totalHeight) * 100)) : 0;
+
+        document.querySelectorAll('[data-toc-progress-text]').forEach((el) => {
+          el.textContent = `${progress}%`;
+        });
+        document.querySelectorAll('[data-toc-progress-bar]').forEach((el) => {
+          (el as HTMLElement).style.width = `${progress}%`;
+        });
+        document.querySelectorAll('[data-mobile-toc-progress]').forEach((el) => {
+          el.textContent = `${progress}%`;
+        });
+      }
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  }
+
+  setupTOC();
+  document.addEventListener('astro:page-load', setupTOC);
+</script>
+
+<style is:global>
+  .toc-target-pulse {
+    outline: 2px solid rgba(14, 165, 233, 0.7);
+    outline-offset: 4px;
+    border-radius: 8px;
+    background-color: rgba(14, 165, 233, 0.08);
+    transition: background-color 1.5s ease-out, outline 1.5s ease-out;
+  }
+</style>

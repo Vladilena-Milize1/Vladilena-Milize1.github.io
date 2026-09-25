@@ -115,7 +115,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site || 'https://example.
     <Header />
 
     <!-- 主体区域：pt-20 确保内容不被 fixed 导航栏遮挡 -->
-    <main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 pb-8 sm:pb-12">
+    <main class="flex-1 w-full max-w-7xl 2xl:max-w-[92rem] mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 pb-8 sm:pb-12">
       {showSidebar ? (
         <div class="flex flex-col lg:flex-row gap-8 lg:gap-10 items-start">
           <!-- 左侧：时刻固定的个人信息侧边栏 (固定在顶部导航栏下方) -->
