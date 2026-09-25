@@ -75,11 +75,201 @@ const formattedDate = new Intl.DateTimeFormat('zh-CN', {
     </header>
 
     <!-- Markdown 正文区 -->
-    <div class="prose dark:prose-invert max-w-none">
+    <div id="article-content" class="prose dark:prose-invert max-w-none">
       <slot />
     </div>
 
     <!-- 评论交流区 -->
     <Comment />
   </article>
+
+  <script>
+    function handleSearchHighlightAndScroll() {
+      const url = new URL(window.location.href);
+      const highlightQuery = url.searchParams.get('highlight') || url.searchParams.get('q');
+      const matchPhrase = url.searchParams.get('match');
+      const hash = url.hash ? decodeURIComponent(url.hash.slice(1)) : '';
+
+      if (!highlightQuery && !matchPhrase && !hash) return;
+
+      const prose = document.getElementById('article-content');
+      if (!prose) return;
+
+      // 清除旧高亮
+      prose.querySelectorAll('.search-target-highlight').forEach((el) => {
+        const parent = el.parentNode;
+        if (parent) {
+          parent.replaceChild(document.createTextNode(el.textContent || ''), el);
+          parent.normalize();
+        }
+      });
+      prose.querySelectorAll('.search-target-paragraph-highlight').forEach((el) => {
+        el.classList.remove('search-target-paragraph-highlight');
+      });
+
+      let targetElement: HTMLElement | null = null;
+      let headingEl: HTMLElement | null = null;
+      if (hash) {
+        headingEl = document.getElementById(hash);
+      }
+
+      // 1. 如果存在 matchPhrase，优先在正文中定位包含该文本特征的段落
+      if (matchPhrase) {
+        const cleanMatch = matchPhrase.replace(/\s+/g, ' ').trim().toLowerCase();
+        const candidateNodes = Array.from(prose.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, blockquote, tr, pre, td'));
+
+        // 如果有关联的 headingEl，优先找 heading 之后的段落
+        if (headingEl) {
+          for (const node of candidateNodes) {
+            if (headingEl.compareDocumentPosition(node) & Node.DOCUMENT_POSITION_FOLLOWING) {
+              const text = (node.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
+              if (text.includes(cleanMatch) || (cleanMatch.length > 8 && text.includes(cleanMatch.slice(0, 8)))) {
+                targetElement = node as HTMLElement;
+                break;
+              }
+            }
+          }
+        }
+
+        if (!targetElement) {
+          for (const node of candidateNodes) {
+            const text = (node.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
+            if (text.includes(cleanMatch) || (cleanMatch.length > 8 && text.includes(cleanMatch.slice(0, 8)))) {
+              targetElement = node as HTMLElement;
+              break;
+            }
+          }
+        }
+      }
+
+      // 2. 如果通过 matchPhrase 没找到，但在 headingEl 范围内
+      if (!targetElement && headingEl) {
+        if (highlightQuery) {
+          let sibling = headingEl.nextElementSibling;
+          while (sibling && !['H1', 'H2', 'H3'].includes(sibling.tagName)) {
+            if ((sibling.textContent || '').toLowerCase().includes(highlightQuery.toLowerCase())) {
+              targetElement = sibling as HTMLElement;
+              break;
+            }
+            sibling = sibling.nextElementSibling;
+          }
+        }
+        if (!targetElement) {
+          targetElement = headingEl;
+        }
+      }
+
+      // 3. 兜底方案：首个包含 highlightQuery 的段落
+      if (!targetElement && highlightQuery) {
+        const cleanQuery = highlightQuery.toLowerCase();
+        const candidateNodes = prose.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, blockquote');
+        for (const node of candidateNodes) {
+          if ((node.textContent || '').toLowerCase().includes(cleanQuery)) {
+            targetElement = node as HTMLElement;
+            break;
+          }
+        }
+      }
+
+      if (!targetElement) return;
+
+      // 计算避让顶部常驻导航栏的平滑滚动
+      const navbarOffset = 85;
+      const elementTop = targetElement.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo({
+        top: Math.max(0, elementTop - navbarOffset),
+        behavior: 'smooth',
+      });
+
+      // 施加段落聚焦脉冲光晕
+      targetElement.classList.add('search-target-paragraph-highlight');
+
+      // 文本内施加关键词高亮
+      if (highlightQuery) {
+        highlightTextInElement(targetElement, highlightQuery);
+      }
+
+      // 3.5秒后平滑消除段落外框与背景色，恢复自然排版
+      setTimeout(() => {
+        if (targetElement) {
+          targetElement.classList.remove('search-target-paragraph-highlight');
+        }
+      }, 3500);
+    }
+
+    function highlightTextInElement(element: HTMLElement, query: string) {
+      const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, {
+        acceptNode(node) {
+          if (!node.textContent || !node.textContent.trim()) return NodeFilter.FILTER_REJECT;
+          const parentTag = node.parentElement?.tagName;
+          if (parentTag === 'SCRIPT' || parentTag === 'STYLE' || parentTag === 'MARK') {
+            return NodeFilter.FILTER_REJECT;
+          }
+          return NodeFilter.FILTER_ACCEPT;
+        },
+      });
+
+      const textNodes: Text[] = [];
+      while (walker.nextNode()) {
+        textNodes.push(walker.currentNode as Text);
+      }
+
+      const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(escaped, 'i');
+
+      for (const node of textNodes) {
+        const text = node.textContent || '';
+        const match = text.match(regex);
+        if (match && match.index !== undefined) {
+          const matchIndex = match.index;
+          const matchStr = match[0];
+
+          const before = text.slice(0, matchIndex);
+          const matched = text.slice(matchIndex, matchIndex + matchStr.length);
+          const after = text.slice(matchIndex + matchStr.length);
+
+          const span = document.createElement('span');
+          if (before) span.appendChild(document.createTextNode(before));
+
+          const mark = document.createElement('mark');
+          mark.className = 'search-target-highlight bg-amber-200/90 dark:bg-amber-800/80 text-amber-950 dark:text-amber-100 px-1 py-0.5 rounded font-semibold ring-2 ring-amber-400/80 dark:ring-amber-500/80 shadow-sm inline-block';
+          mark.textContent = matched;
+          span.appendChild(mark);
+
+          if (after) span.appendChild(document.createTextNode(after));
+
+          node.parentNode?.replaceChild(span, node);
+          break;
+        }
+      }
+    }
+
+    // 页面加载及 Astro 客户端路由事件
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(handleSearchHighlightAndScroll, 150);
+      });
+    } else {
+      setTimeout(handleSearchHighlightAndScroll, 150);
+    }
+    document.addEventListener('astro:page-load', () => {
+      setTimeout(handleSearchHighlightAndScroll, 150);
+    });
+
+    // 监听同页内搜索文段快速定位
+    window.addEventListener('blog:search-jump', () => {
+      setTimeout(handleSearchHighlightAndScroll, 60);
+    });
+  </script>
+
+  <style is:global>
+    .search-target-paragraph-highlight {
+      outline: 2px solid rgba(59, 130, 246, 0.75);
+      outline-offset: 6px;
+      border-radius: 12px;
+      background-color: rgba(59, 130, 246, 0.09);
+      box-shadow: 0 0 20px -3px rgba(59, 130, 246, 0.25);
+      transition: background-color 2s ease-out, outline 2s ease-out, box-shadow 2s ease-out;
+    }
+  </style>
 </BaseLayout>

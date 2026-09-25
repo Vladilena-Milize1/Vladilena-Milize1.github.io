@@ -34,7 +34,7 @@ const { class: className = "" } = Astro.props;
   </kbd>
 </button>
 
-<!-- 屏幕死正中模态搜索弹窗 (严格位于视口中央，匹配参考图样式) -->
+<!-- 屏幕正中模态搜索弹窗 -->
 <div
   id="search-modal"
   class="fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-sm bg-neutral-950/45 transition-opacity duration-200 opacity-0 pointer-events-none"
@@ -43,10 +43,10 @@ const { class: className = "" } = Astro.props;
   aria-labelledby="search-modal-input"
 >
   <div
-    class="w-full max-w-xl bg-white dark:bg-neutral-900 rounded-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border border-neutral-200/90 dark:border-neutral-700/80 overflow-hidden flex flex-col transition-transform duration-200 scale-95"
+    class="w-full max-w-2xl bg-white dark:bg-neutral-900 rounded-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border border-neutral-200/90 dark:border-neutral-700/80 overflow-hidden flex flex-col transition-transform duration-200 scale-95"
     data-search-modal-container
   >
-    <!-- 主搜索条 (对标图一：居中简约胶囊条，含放大镜线标与输入框) -->
+    <!-- 主搜索条 -->
     <div class="px-4 py-3 flex items-center gap-3">
       <!-- 简约放大镜线标 -->
       <svg class="w-5 h-5 text-neutral-400 dark:text-neutral-500 shrink-0 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -63,7 +63,7 @@ const { class: className = "" } = Astro.props;
         class="flex-1 min-w-0 bg-transparent text-sm sm:text-base text-neutral-900 dark:text-neutral-50 placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none"
       />
 
-      <!-- 匹配模式切换 (纯文字切换，无任何装饰贴图) -->
+      <!-- 匹配模式切换 (纯文字切换) -->
       <div class="flex items-center p-0.5 bg-neutral-100 dark:bg-neutral-800 rounded-lg text-xs shrink-0 select-none" role="tablist">
         <button
           type="button"
@@ -85,7 +85,7 @@ const { class: className = "" } = Astro.props;
         </button>
       </div>
 
-      <!-- 清空与关闭纯文字按钮 -->
+      <!-- 清空与关闭按钮 -->
       <div class="flex items-center gap-1.5 shrink-0">
         <button
           type="button"
@@ -104,18 +104,18 @@ const { class: className = "" } = Astro.props;
       </div>
     </div>
 
-    <!-- 向下伸展的内容展示区 (对标图二：匹配时自动展开，有滚动条，底部纯文字快捷提示) -->
+    <!-- 向下伸展的内容展示区 -->
     <div
       id="search-results-wrapper"
-      class="hidden border-t border-neutral-100 dark:border-neutral-800 flex flex-col max-h-[62vh] sm:max-h-[55vh]"
+      class="hidden border-t border-neutral-100 dark:border-neutral-800 flex flex-col max-h-[65vh] sm:max-h-[60vh]"
     >
       <!-- 结果列表 -->
       <div
         id="search-results-list"
-        class="flex-1 overflow-y-auto p-3 space-y-2 divide-y divide-neutral-100/70 dark:divide-neutral-800/60"
+        class="flex-1 overflow-y-auto p-3 space-y-3 divide-y divide-neutral-100/70 dark:divide-neutral-800/60"
       ></div>
 
-      <!-- 无匹配文字提示 (纯文字，无任何 emoji 或贴图) -->
+      <!-- 无匹配文字提示 -->
       <div id="search-empty-state" class="py-8 px-4 text-center space-y-1 hidden">
         <p class="text-xs sm:text-sm text-neutral-600 dark:text-neutral-300 font-medium">
           未找到匹配内容
@@ -125,7 +125,7 @@ const { class: className = "" } = Astro.props;
         </p>
       </div>
 
-      <!-- 底部纯文字提示栏 (对标图二底部: ↑↓ 切换  ↵ 选择  Esc 关闭) -->
+      <!-- 底部纯文字提示栏 -->
       <div class="px-4 py-2.5 border-t border-neutral-100 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-900/40 text-xs text-neutral-400 dark:text-neutral-500 flex items-center justify-center gap-6 select-none">
         <span class="inline-flex items-center gap-1">
           <span class="font-mono text-neutral-500 dark:text-neutral-400">↑↓</span>
@@ -133,7 +133,7 @@ const { class: className = "" } = Astro.props;
         </span>
         <span class="inline-flex items-center gap-1">
           <span class="font-mono text-neutral-500 dark:text-neutral-400">↵</span>
-          <span>选择</span>
+          <span>选择跳转</span>
         </span>
         <span class="inline-flex items-center gap-1">
           <span class="font-mono text-neutral-500 dark:text-neutral-400">Tab</span>
@@ -152,7 +152,6 @@ const { class: className = "" } = Astro.props;
   (() => {
     let cachedIndex = null;
     let currentMode = 'title'; // 'title' | 'content'
-    let currentMatches = [];
     let selectedIndex = -1;
 
     function updateKbdBadges() {
@@ -180,39 +179,38 @@ const { class: className = "" } = Astro.props;
       const regex = new RegExp(`(${escaped})`, 'gi');
       return text.replace(
         regex,
-        '<mark class="bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 px-0.5 rounded font-semibold">$1</mark>'
+        '<mark class="bg-blue-100 dark:bg-blue-900/70 text-blue-700 dark:text-blue-300 px-0.5 rounded font-semibold">$1</mark>'
       );
     }
 
-    function extractSnippet(content, query) {
-      if (!content || !query) return '';
-      const lowerContent = content.toLowerCase();
-      const lowerQuery = query.toLowerCase();
-      const index = lowerContent.indexOf(lowerQuery);
-      if (index === -1) return '';
+    function getVisibleItems() {
+      const resultsList = document.getElementById('search-results-list');
+      if (!resultsList) return [];
+      return Array.from(resultsList.querySelectorAll('a[data-search-item]')).filter((el) => {
+        return el.offsetParent !== null;
+      });
+    }
 
-      const beforeLen = 35;
-      const afterLen = 75;
-      const start = Math.max(0, index - beforeLen);
-      const end = Math.min(content.length, index + query.length + afterLen);
-
-      let snippet = content.slice(start, end).trim();
-      if (start > 0) snippet = '...' + snippet;
-      if (end < content.length) snippet = snippet + '...';
-
-      return highlightText(snippet, query);
+    function updateSelection() {
+      const visibleItems = getVisibleItems();
+      visibleItems.forEach((item, idx) => {
+        if (idx === selectedIndex) {
+          item.classList.add('ring-2', 'ring-blue-500', 'bg-blue-50/90', 'dark:bg-blue-950/70');
+          item.scrollIntoView({ block: 'nearest' });
+        } else {
+          item.classList.remove('ring-2', 'ring-blue-500', 'bg-blue-50/90', 'dark:bg-blue-950/70');
+        }
+      });
     }
 
     function initSearchSystem() {
       updateKbdBadges();
 
-      // 获取 modal 并强制挂载至 document.body，确保 position: fixed 绝不受 header 的 backdrop-blur 限制！
       const modal = document.getElementById('search-modal');
       if (modal && modal.parentElement !== document.body) {
         document.body.appendChild(modal);
       }
 
-      // 清理重复挂载的模态弹窗
       const allModals = document.querySelectorAll('#search-modal');
       if (allModals.length > 1) {
         for (let i = 1; i < allModals.length; i++) {
@@ -232,7 +230,7 @@ const { class: className = "" } = Astro.props;
       const emptyState = document.getElementById('search-empty-state');
       const modePills = activeModal.querySelectorAll('.search-mode-pill');
 
-      if (!input || !modalContainer || !resultsWrapper) return;
+      if (!input || !modalContainer || !resultsWrapper || !resultsList) return;
 
       function openModal() {
         activeModal.classList.remove('opacity-0', 'pointer-events-none');
@@ -278,18 +276,6 @@ const { class: className = "" } = Astro.props;
         }
       }
 
-      function updateSelection() {
-        const items = resultsList.querySelectorAll('[data-search-item]');
-        items.forEach((item, idx) => {
-          if (idx === selectedIndex) {
-            item.classList.add('bg-neutral-100/80', 'dark:bg-neutral-800/80', 'ring-1', 'ring-blue-500/40');
-            item.scrollIntoView({ block: 'nearest' });
-          } else {
-            item.classList.remove('bg-neutral-100/80', 'dark:bg-neutral-800/80', 'ring-1', 'ring-blue-500/40');
-          }
-        });
-      }
-
       async function executeSearch(query) {
         selectedIndex = -1;
 
@@ -307,48 +293,171 @@ const { class: className = "" } = Astro.props;
         const index = await getIndex();
         const queryLower = query.toLowerCase();
 
-        let matches = [];
+        const articleGroups = [];
 
-        if (currentMode === 'title') {
-          matches = index
-            .map((item) => {
-              const titleMatch = item.title.toLowerCase().includes(queryLower);
-              const tagMatch = item.tags && item.tags.some((t) => t.toLowerCase().includes(queryLower));
-              if (titleMatch || tagMatch) {
-                return { item, matchType: titleMatch ? 'title' : 'tag', snippet: '' };
+        for (const item of index) {
+          const titleMatch = item.title.toLowerCase().includes(queryLower);
+          const tagMatch = item.tags && item.tags.some((t) => t.toLowerCase().includes(queryLower));
+          const descMatch = item.description && item.description.toLowerCase().includes(queryLower);
+
+          if (currentMode === 'title') {
+            if (titleMatch || tagMatch) {
+              articleGroups.push({
+                item,
+                matches: [{
+                  sectionHeading: titleMatch ? '文章标题' : '文章标签',
+                  sectionId: '',
+                  snippet: highlightText(item.title, query),
+                  matchText: item.title,
+                  jumpUrl: `?highlight=${encodeURIComponent(query)}&match=${encodeURIComponent(item.title)}`,
+                }],
+              });
+            }
+            continue;
+          }
+
+          // currentMode === 'content' 全文多结果细粒度匹配
+          const matches = [];
+
+          // 1. 标题匹配
+          if (titleMatch) {
+            matches.push({
+              sectionHeading: '文章标题',
+              sectionId: '',
+              snippet: highlightText(item.title, query),
+              matchText: item.title,
+              jumpUrl: `?highlight=${encodeURIComponent(query)}&match=${encodeURIComponent(item.title)}`,
+            });
+          }
+
+          // 2. 小节段落匹配
+          if (item.sections && Array.isArray(item.sections) && item.sections.length > 0) {
+            for (const section of item.sections) {
+              const headingLower = (section.heading || '').toLowerCase();
+              const text = section.text || '';
+              const textLower = text.toLowerCase();
+
+              // 如果小节标题包含关键词
+              if (headingLower.includes(queryLower) && section.heading !== item.title) {
+                matches.push({
+                  sectionHeading: section.heading,
+                  sectionId: section.id,
+                  snippet: highlightText(section.heading, query),
+                  matchText: section.heading,
+                  jumpUrl: `?highlight=${encodeURIComponent(query)}&match=${encodeURIComponent(section.heading)}${section.id ? '#' + encodeURIComponent(section.id) : ''}`,
+                });
               }
-              return null;
-            })
-            .filter(Boolean);
-        } else {
-          matches = index
-            .map((item) => {
-              const titleMatch = item.title.toLowerCase().includes(queryLower);
-              const tagMatch = item.tags && item.tags.some((t) => t.toLowerCase().includes(queryLower));
-              const descMatch = item.description && item.description.toLowerCase().includes(queryLower);
-              const contentMatch = item.content && item.content.toLowerCase().includes(queryLower);
 
-              if (titleMatch || tagMatch || descMatch || contentMatch) {
-                let snippet = '';
-                if (contentMatch) {
-                  snippet = extractSnippet(item.content, query);
-                } else if (descMatch) {
-                  snippet = extractSnippet(item.description, query);
+              // 扫描小节正文内的所有匹配文段
+              if (textLower.includes(queryLower)) {
+                let pos = 0;
+                let lastEnd = -1;
+
+                while (pos < textLower.length) {
+                  const idx = textLower.indexOf(queryLower, pos);
+                  if (idx === -1) break;
+
+                  // 相邻近的匹配文段（如间隔小于 60 字符）合并显示，防止同句生成重复冗余条目
+                  if (idx < lastEnd + 60 && matches.length > 0) {
+                    pos = idx + queryLower.length;
+                    continue;
+                  }
+
+                  const beforeLen = 35;
+                  const afterLen = 70;
+                  const start = Math.max(0, idx - beforeLen);
+                  const end = Math.min(text.length, idx + queryLower.length + afterLen);
+                  lastEnd = end;
+
+                  let rawSnippet = text.slice(start, end).trim();
+                  if (start > 0) rawSnippet = '...' + rawSnippet;
+                  if (end < text.length) rawSnippet = rawSnippet + '...';
+
+                  // 提取约 20-30 个字符的原始纯文本作为段落特征定位依据
+                  const matchFeature = text.slice(Math.max(0, idx - 10), Math.min(text.length, idx + queryLower.length + 15)).trim();
+
+                  matches.push({
+                    sectionHeading: section.heading,
+                    sectionId: section.id,
+                    snippet: highlightText(rawSnippet, query),
+                    matchText: matchFeature,
+                    jumpUrl: `?highlight=${encodeURIComponent(query)}&match=${encodeURIComponent(matchFeature)}${section.id ? '#' + encodeURIComponent(section.id) : ''}`,
+                  });
+
+                  pos = idx + queryLower.length;
+                  if (matches.length >= 25) break;
                 }
-                return {
-                  item,
-                  matchType: titleMatch ? 'title' : (contentMatch ? 'content' : (descMatch ? 'description' : 'tag')),
-                  snippet,
-                };
               }
-              return null;
-            })
-            .filter(Boolean);
+              if (matches.length >= 25) break;
+            }
+          } else if (item.content) {
+            // 降级：未分节的全文逐段提取
+            const content = item.content;
+            const contentLower = content.toLowerCase();
+            let pos = 0;
+            let lastEnd = -1;
+
+            while (pos < contentLower.length) {
+              const idx = contentLower.indexOf(queryLower, pos);
+              if (idx === -1) break;
+
+              if (idx < lastEnd + 60 && matches.length > 0) {
+                pos = idx + queryLower.length;
+                continue;
+              }
+
+              const beforeLen = 35;
+              const afterLen = 70;
+              const start = Math.max(0, idx - beforeLen);
+              const end = Math.min(content.length, idx + queryLower.length + afterLen);
+              lastEnd = end;
+
+              let rawSnippet = content.slice(start, end).trim();
+              if (start > 0) rawSnippet = '...' + rawSnippet;
+              if (end < content.length) rawSnippet = rawSnippet + '...';
+
+              const matchFeature = content.slice(Math.max(0, idx - 10), Math.min(content.length, idx + queryLower.length + 15)).trim();
+
+              matches.push({
+                sectionHeading: '',
+                sectionId: '',
+                snippet: highlightText(rawSnippet, query),
+                matchText: matchFeature,
+                jumpUrl: `?highlight=${encodeURIComponent(query)}&match=${encodeURIComponent(matchFeature)}`,
+              });
+
+              pos = idx + queryLower.length;
+              if (matches.length >= 25) break;
+            }
+          }
+
+          // 3. 兜底匹配：若正文没有但描述匹配
+          if (matches.length === 0) {
+            if (descMatch) {
+              matches.push({
+                sectionHeading: '摘要描述',
+                sectionId: '',
+                snippet: highlightText(item.description, query),
+                matchText: query,
+                jumpUrl: `?highlight=${encodeURIComponent(query)}`,
+              });
+            } else if (tagMatch) {
+              matches.push({
+                sectionHeading: '文章标签',
+                sectionId: '',
+                snippet: highlightText(item.title, query),
+                matchText: item.title,
+                jumpUrl: `?highlight=${encodeURIComponent(query)}`,
+              });
+            }
+          }
+
+          if (matches.length > 0) {
+            articleGroups.push({ item, matches });
+          }
         }
 
-        currentMatches = matches;
-
-        if (matches.length === 0) {
+        if (articleGroups.length === 0) {
           resultsList.classList.add('hidden');
           emptyState.classList.remove('hidden');
           resultsList.innerHTML = '';
@@ -358,49 +467,186 @@ const { class: className = "" } = Astro.props;
         emptyState.classList.add('hidden');
         resultsList.classList.remove('hidden');
 
-        resultsList.innerHTML = matches.map(({ item, snippet }, idx) => `
-          <a
-            href="/posts/${item.slug}"
-            data-search-item
-            data-index="${idx}"
-            class="block p-2.5 rounded-xl hover:bg-neutral-100/70 dark:hover:bg-neutral-800/70 transition-all group select-none"
-          >
-            <div class="flex items-center justify-between gap-2 mb-1">
-              <h4 class="text-sm font-semibold text-neutral-800 dark:text-neutral-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-snug">
-                ${highlightText(item.title, query)}
-              </h4>
-              <span class="text-[11px] font-mono text-neutral-400 dark:text-neutral-500 shrink-0">
-                ${item.date}
-              </span>
-            </div>
+        resultsList.innerHTML = articleGroups.map(({ item, matches }, groupIdx) => {
+          const firstMatch = matches[0];
+          const hasMultiple = matches.length > 1;
 
-            ${snippet ? `
-              <p class="text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed line-clamp-2 mt-1">
-                ${snippet}
-              </p>
-            ` : (item.description ? `
-              <p class="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-1 mt-0.5">
-                ${highlightText(item.description, query)}
-              </p>
-            ` : '')}
+          return `
+            <div class="search-article-group pt-3 first:pt-0 space-y-2 select-none" data-group-index="${groupIdx}">
+              <!-- 文章主头部 -->
+              <div class="flex items-start justify-between gap-2">
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 flex-wrap mb-1">
+                    <a
+                      href="/posts/${item.slug}${firstMatch.jumpUrl}"
+                      data-search-item
+                      class="text-sm font-semibold text-neutral-800 dark:text-neutral-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors leading-snug cursor-pointer group"
+                    >
+                      <span class="group-hover:underline underline-offset-2">${highlightText(item.title, query)}</span>
+                    </a>
+                    ${hasMultiple ? `
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/60">
+                        共 ${matches.length} 处匹配
+                      </span>
+                    ` : ''}
+                  </div>
 
-            ${item.tags && item.tags.length ? `
-              <div class="flex items-center gap-1.5 mt-1.5">
-                ${item.tags.map((t) => `
-                  <span class="text-[10px] px-1.5 py-0.2 rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 font-mono">
-                    #${highlightText(t, query)}
-                  </span>
-                `).join('')}
+                  ${item.tags && item.tags.length ? `
+                    <div class="flex items-center gap-1.5 mb-1.5">
+                      ${item.tags.map((t) => `
+                        <span class="text-[10px] px-1.5 py-0.2 rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 font-mono">
+                          #${highlightText(t, query)}
+                        </span>
+                      `).join('')}
+                    </div>
+                  ` : ''}
+                </div>
+
+                <span class="text-[11px] font-mono text-neutral-400 dark:text-neutral-500 shrink-0 mt-0.5">
+                  ${item.date}
+                </span>
               </div>
-            ` : ''}
-          </a>
-        `).join('');
 
-        if (matches.length > 0) {
+              <!-- 首条匹配文段预览 -->
+              <a
+                href="/posts/${item.slug}${firstMatch.jumpUrl}"
+                data-search-item
+                class="search-match-link block p-2 rounded-lg bg-neutral-50/80 dark:bg-neutral-800/50 hover:bg-blue-50/80 dark:hover:bg-blue-950/50 border border-neutral-200/60 dark:border-neutral-700/60 transition-all text-xs text-neutral-600 dark:text-neutral-300"
+              >
+                <div class="flex items-center justify-between gap-2 mb-1 text-[11px] font-mono">
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-blue-600 dark:text-blue-400 font-semibold">§ 匹配 1</span>
+                    ${firstMatch.sectionHeading ? `
+                      <span class="px-1.5 py-0.2 rounded bg-neutral-200/70 dark:bg-neutral-700/80 text-neutral-700 dark:text-neutral-300 text-[10px] font-sans">
+                        ${firstMatch.sectionHeading}
+                      </span>
+                    ` : ''}
+                  </div>
+                  <span class="text-[10px] text-neutral-400 dark:text-neutral-500 group-hover:text-blue-500 transition-colors">跳转文段 &rarr;</span>
+                </div>
+                <div class="leading-relaxed line-clamp-2">
+                  ${firstMatch.snippet}
+                </div>
+              </a>
+
+              <!-- 若有多处重复结果，提供可展开的子列表 -->
+              ${hasMultiple ? `
+                <div class="search-expand-container pt-0.5">
+                  <button
+                    type="button"
+                    data-expand-btn
+                    data-total="${matches.length}"
+                    aria-expanded="false"
+                    class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium text-neutral-600 dark:text-neutral-300 hover:text-blue-600 dark:hover:text-blue-400 bg-neutral-100/70 hover:bg-neutral-200/60 dark:bg-neutral-800/50 dark:hover:bg-neutral-800 transition-colors select-none cursor-pointer"
+                  >
+                    <span class="inline-flex items-center gap-1.5">
+                      <svg class="expand-icon w-3.5 h-3.5 transition-transform duration-200 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                      </svg>
+                      <span class="expand-btn-text">展开其余 ${matches.length - 1} 处文段匹配</span>
+                    </span>
+                    <span class="text-[10px] font-mono text-neutral-400 dark:text-neutral-500">
+                      共 ${matches.length} 处
+                    </span>
+                  </button>
+
+                  <div data-expand-list class="hidden mt-2 space-y-1.5 pl-2.5 border-l-2 border-blue-500/30">
+                    ${matches.slice(1).map((match, subIdx) => `
+                      <a
+                        href="/posts/${item.slug}${match.jumpUrl}"
+                        data-search-item
+                        class="search-match-link block p-2 rounded-lg bg-neutral-50/80 dark:bg-neutral-800/50 hover:bg-blue-50/80 dark:hover:bg-blue-950/50 border border-neutral-200/50 dark:border-neutral-700/50 transition-all text-xs text-neutral-600 dark:text-neutral-300"
+                      >
+                        <div class="flex items-center justify-between gap-2 mb-1 text-[11px] font-mono">
+                          <div class="flex items-center gap-1.5">
+                            <span class="text-blue-600 dark:text-blue-400 font-semibold">§ 匹配 ${subIdx + 2}</span>
+                            ${match.sectionHeading ? `
+                              <span class="px-1.5 py-0.2 rounded bg-neutral-200/70 dark:bg-neutral-700/80 text-neutral-700 dark:text-neutral-300 text-[10px] font-sans">
+                                ${match.sectionHeading}
+                              </span>
+                            ` : ''}
+                          </div>
+                          <span class="text-[10px] text-neutral-400 dark:text-neutral-500">跳转文段 &rarr;</span>
+                        </div>
+                        <div class="leading-relaxed line-clamp-2">
+                          ${match.snippet}
+                        </div>
+                      </a>
+                    `).join('')}
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+          `;
+        }).join('');
+
+        if (articleGroups.length > 0) {
           selectedIndex = 0;
           updateSelection();
         }
       }
+
+      // 展开/收起多文段列表交互与结果点击监听
+      resultsList.onclick = (e) => {
+        const expandBtn = e.target.closest('[data-expand-btn]');
+        if (expandBtn) {
+          e.preventDefault();
+          e.stopPropagation();
+          const container = expandBtn.closest('.search-expand-container');
+          const list = container?.querySelector('[data-expand-list]');
+          const icon = expandBtn.querySelector('.expand-icon');
+          const textSpan = expandBtn.querySelector('.expand-btn-text');
+          const total = expandBtn.dataset.total || '2';
+
+          if (list) {
+            const isHidden = list.classList.contains('hidden');
+            if (isHidden) {
+              list.classList.remove('hidden');
+              expandBtn.setAttribute('aria-expanded', 'true');
+              if (textSpan) textSpan.textContent = '收起文段匹配';
+              if (icon) icon.classList.add('rotate-180');
+            } else {
+              list.classList.add('hidden');
+              expandBtn.setAttribute('aria-expanded', 'false');
+              if (textSpan) textSpan.textContent = `展开其余 ${Number(total) - 1} 处文段匹配`;
+              if (icon) icon.classList.remove('rotate-180');
+            }
+            updateSelection();
+          }
+          return;
+        }
+
+        const matchLink = e.target.closest('a[data-search-item]');
+        if (matchLink) {
+          const href = matchLink.getAttribute('href');
+          if (!href) return;
+
+          const targetUrl = new URL(href, window.location.origin);
+          if (targetUrl.pathname === window.location.pathname) {
+            // 当前已经在该文章页面中，直接执行同页定位！
+            e.preventDefault();
+            closeModal();
+            window.history.pushState(null, '', href);
+            window.dispatchEvent(new CustomEvent('blog:search-jump'));
+          } else {
+            // 跨页跳转，直接正常导航
+            closeModal();
+          }
+        }
+      };
+
+      // 鼠标悬停实时同步选中状态
+      resultsList.onmouseover = (e) => {
+        const item = e.target.closest('a[data-search-item]');
+        if (item) {
+          const visibleItems = getVisibleItems();
+          const idx = visibleItems.indexOf(item);
+          if (idx !== -1 && idx !== selectedIndex) {
+            selectedIndex = idx;
+            updateSelection();
+          }
+        }
+      };
 
       document.querySelectorAll('[data-search-open-btn]').forEach((btn) => {
         btn.onclick = (e) => {
@@ -444,10 +690,12 @@ const { class: className = "" } = Astro.props;
           return;
         }
 
+        const visibleItems = getVisibleItems();
+
         if (e.key === 'ArrowDown') {
           e.preventDefault();
-          if (currentMatches.length > 0) {
-            selectedIndex = (selectedIndex + 1) % currentMatches.length;
+          if (visibleItems.length > 0) {
+            selectedIndex = (selectedIndex + 1) % visibleItems.length;
             updateSelection();
           }
           return;
@@ -455,8 +703,8 @@ const { class: className = "" } = Astro.props;
 
         if (e.key === 'ArrowUp') {
           e.preventDefault();
-          if (currentMatches.length > 0) {
-            selectedIndex = (selectedIndex - 1 + currentMatches.length) % currentMatches.length;
+          if (visibleItems.length > 0) {
+            selectedIndex = (selectedIndex - 1 + visibleItems.length) % visibleItems.length;
             updateSelection();
           }
           return;
@@ -464,8 +712,7 @@ const { class: className = "" } = Astro.props;
 
         if (e.key === 'Enter') {
           e.preventDefault();
-          const items = resultsList.querySelectorAll('a[data-search-item]');
-          const target = items[selectedIndex] || items[0];
+          const target = visibleItems[selectedIndex] || visibleItems[0];
           if (target) {
             target.click();
           }
